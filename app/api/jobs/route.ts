@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
         isColor,
         isDuplex,
         totalAmount,
+        paymentMethod,
       },
     })
   } catch (err) {
