@@ -8,9 +8,10 @@ interface Props {
   total: number
   paymentMethod: PaymentMethod
   shopName: string
+  onPrintAnother: () => void
 }
 
-export default function ConfirmationScreen({ jobId, total, paymentMethod, shopName }: Props) {
+export default function ConfirmationScreen({ jobId, total, paymentMethod, shopName, onPrintAnother }: Props) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success-50 text-2xl">
@@ -23,6 +24,13 @@ export default function ConfirmationScreen({ jobId, total, paymentMethod, shopNa
           : `Complete the payment in your UPI app. Your print will start once ${shopName} confirms it.`}
       </p>
       <p className="mt-6 text-xs text-muted">Job reference: {jobId.slice(0, 8).toUpperCase()}</p>
+      <button
+        type="button"
+        onClick={onPrintAnother}
+        className="mt-8 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-brand-600"
+      >
+        Print another document
+      </button>
     </main>
   )
 }

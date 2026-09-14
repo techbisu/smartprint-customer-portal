@@ -31,6 +31,7 @@ export default function UploadFlow({ shop, items }: Props) {
   const [fileError, setFileError] = useState<string>()
   const [detectingPages, setDetectingPages] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [submittingMethod, setSubmittingMethod] = useState<PaymentMethod>()
   const [submitError, setSubmitError] = useState<string>()
   const [confirmedJob, setConfirmedJob] = useState<{ jobId: string; total: number; method: PaymentMethod } | null>(
     null,
@@ -68,6 +69,7 @@ export default function UploadFlow({ shop, items }: Props) {
   async function handleSubmit(method: PaymentMethod) {
     if (!selectedItem || !file || !pricing) return
     setSubmitting(true)
+    setSubmittingMethod(method)
     setSubmitError(undefined)
 
     try {
@@ -115,7 +117,21 @@ export default function UploadFlow({ shop, items }: Props) {
       setSubmitError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
       setSubmitting(false)
+      setSubmittingMethod(undefined)
     }
+  }
+
+  function resetFlow() {
+    setFile(null)
+    setPages(1)
+    setCopies(1)
+    setIsColor(false)
+    setIsDuplex(false)
+    setFileError(undefined)
+    setSubmitError(undefined)
+    setConfirmedJob(null)
+    setStage(items.length === 1 ? 'configure' : 'select-service')
+    setSelectedItem(items.length === 1 ? items[0] : null)
   }
 
   if (stage === 'done' && confirmedJob) {
@@ -125,6 +141,7 @@ export default function UploadFlow({ shop, items }: Props) {
         total={confirmedJob.total}
         paymentMethod={confirmedJob.method}
         shopName={shop.shop_name}
+        onPrintAnother={resetFlow}
       />
     )
   }
@@ -203,6 +220,7 @@ export default function UploadFlow({ shop, items }: Props) {
           copies={copies}
           disabled={!file || detectingPages}
           submitting={submitting}
+          submittingMethod={submittingMethod}
           onPayUpi={() => handleSubmit('upi')}
           onPayCounter={() => handleSubmit('counter')}
         />

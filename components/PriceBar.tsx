@@ -9,6 +9,7 @@ interface Props {
   copies: number
   disabled: boolean
   submitting: boolean
+  submittingMethod?: 'upi' | 'counter'
   onPayUpi: () => void
   onPayCounter: () => void
 }
@@ -20,6 +21,7 @@ export default function PriceBar({
   copies,
   disabled,
   submitting,
+  submittingMethod,
   onPayUpi,
   onPayCounter,
 }: Props) {
@@ -42,14 +44,14 @@ export default function PriceBar({
             disabled={disabled || submitting}
             className="rounded-full border border-line px-4 py-2.5 text-sm font-medium disabled:opacity-40"
           >
-            Pay at counter
+            {submitting && submittingMethod === 'counter' ? 'Submitting…' : 'Pay at counter'}
           </button>
           <button
             onClick={onPayUpi}
             disabled={disabled || submitting}
             className="rounded-full bg-marigold-500 px-5 py-2.5 text-sm font-semibold text-ink disabled:opacity-40"
           >
-            {submitting ? 'Please wait…' : 'Pay via UPI'}
+            {submitting && submittingMethod === 'upi' ? 'Opening UPI…' : 'Pay via UPI'}
           </button>
         </div>
       </div>
