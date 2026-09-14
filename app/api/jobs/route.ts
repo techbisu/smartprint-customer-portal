@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { shopSlug, serviceCode, filename, fileUrl, fileType, pages, copies, isColor, isDuplex, totalAmount, paymentMethod } = body
+  const { shopSlug, serviceCode, filename, fileUrl, fileType, pages, pageSelection, copies, isColor, isDuplex, totalAmount, paymentMethod } = body
 
   if (!shopSlug || !serviceCode || !fileUrl || !totalAmount) {
     return NextResponse.json({ error: 'Missing required job fields' }, { status: 400 })
@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
     file_url: fileUrl,
     file_type: fileType,
     pages,
+    page_selection: pageSelection,
     copies,
     is_color: isColor,
     is_duplex: isDuplex,
@@ -66,6 +67,7 @@ export async function POST(req: NextRequest) {
         fileUrl,
         fileType,
         pages,
+        pageSelection,
         copies,
         isColor,
         isDuplex,

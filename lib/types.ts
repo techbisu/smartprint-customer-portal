@@ -30,6 +30,7 @@ export interface NewJobRequest {
   fileUrl: string
   fileType: string
   pages: number
+  pageSelection?: string
   copies: number
   isColor: boolean
   isDuplex: boolean

@@ -40,6 +40,7 @@ create table if not exists print_jobs (
     file_url text not null,
     file_type varchar(10) not null,
     pages int default 1,
+    page_selection varchar(255) default 'all',
     copies int default 1,
     is_color boolean default false,
     is_duplex boolean default false,

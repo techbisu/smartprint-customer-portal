@@ -10,6 +10,8 @@ import UploadDropzone from '@/components/UploadDropzone'
 import JobOptions from '@/components/JobOptions'
 import PriceBar from '@/components/PriceBar'
 import ConfirmationScreen from '@/components/ConfirmationScreen'
+import PageSelection from '@/components/PageSelection'
+import { pageSelectionLabel, PageSelectionMode, selectedPageCount } from '@/lib/pageSelection'
 
 interface Props {
   shop: Shop
@@ -24,6 +26,8 @@ export default function UploadFlow({ shop, items }: Props) {
 
   const [file, setFile] = useState<File | null>(null)
   const [pages, setPages] = useState(1)
+  const [pageSelectionMode, setPageSelectionMode] = useState<PageSelectionMode>('all')
+  const [customPages, setCustomPages] = useState('')
   const [copies, setCopies] = useState(1)
   const [isColor, setIsColor] = useState(false)
   const [isDuplex, setIsDuplex] = useState(false)
@@ -37,10 +41,15 @@ export default function UploadFlow({ shop, items }: Props) {
     null,
   )
 
+  const selectedPages = selectedPageCount(pages, pageSelectionMode, customPages)
+  const pageSelectionError = file && !detectingPages && selectedPages == null
+    ? `Enter page numbers between 1 and ${pages}, for example 1-3, 5, 8-10.`
+    : undefined
+
   const pricing = useMemo(() => {
-    if (!selectedItem) return null
-    return calculatePrice({ item: selectedItem, pages, copies, isColor, isDuplex })
-  }, [selectedItem, pages, copies, isColor, isDuplex])
+    if (!selectedItem || !selectedPages) return null
+    return calculatePrice({ item: selectedItem, pages: selectedPages, copies, isColor, isDuplex })
+  }, [selectedItem, selectedPages, copies, isColor, isDuplex])
 
   async function handleFile(f: File) {
     setFileError(undefined)
@@ -49,6 +58,8 @@ export default function UploadFlow({ shop, items }: Props) {
       return
     }
     setFile(f)
+    setPageSelectionMode('all')
+    setCustomPages('')
 
     if (f.type === 'application/pdf') {
       setDetectingPages(true)
@@ -58,16 +69,20 @@ export default function UploadFlow({ shop, items }: Props) {
       } catch {
         setFileError('Could not read this PDF. It may be corrupted or password-protected.')
         setPages(1)
+    setPageSelectionMode('all')
+    setCustomPages('')
       } finally {
         setDetectingPages(false)
       }
     } else {
       setPages(1)
+    setPageSelectionMode('all')
+    setCustomPages('')
     }
   }
 
   async function handleSubmit(method: PaymentMethod) {
-    if (!selectedItem || !file || !pricing) return
+    if (!selectedItem || !file || !pricing || !selectedPages) return
     setSubmitting(true)
     setSubmittingMethod(method)
     setSubmitError(undefined)
@@ -92,6 +107,7 @@ export default function UploadFlow({ shop, items }: Props) {
           fileUrl: publicUrlData.publicUrl,
           fileType: file.type === 'application/pdf' ? 'pdf' : file.type.split('/')[1] ?? 'pdf',
           pages,
+          pageSelection: pageSelectionLabel(pageSelectionMode, customPages),
           copies,
           isColor,
           isDuplex,
@@ -124,6 +140,8 @@ export default function UploadFlow({ shop, items }: Props) {
   function resetFlow() {
     setFile(null)
     setPages(1)
+    setPageSelectionMode('all')
+    setCustomPages('')
     setCopies(1)
     setIsColor(false)
     setIsDuplex(false)
@@ -196,15 +214,27 @@ export default function UploadFlow({ shop, items }: Props) {
             {detectingPages && <p className="text-sm text-muted">Reading document…</p>}
 
             {file && !detectingPages && (
-              <JobOptions
-                item={selectedItem}
-                copies={copies}
-                isColor={isColor}
-                isDuplex={isDuplex}
-                onCopiesChange={setCopies}
-                onColorChange={setIsColor}
-                onDuplexChange={setIsDuplex}
-              />
+              <>
+                {file.type === 'application/pdf' && pages > 1 && (
+                  <PageSelection
+                    totalPages={pages}
+                    mode={pageSelectionMode}
+                    customPages={customPages}
+                    error={pageSelectionError}
+                    onModeChange={setPageSelectionMode}
+                    onCustomPagesChange={setCustomPages}
+                  />
+                )}
+                <JobOptions
+                  item={selectedItem}
+                  copies={copies}
+                  isColor={isColor}
+                  isDuplex={isDuplex}
+                  onCopiesChange={setCopies}
+                  onColorChange={setIsColor}
+                  onDuplexChange={setIsDuplex}
+                />
+              </>
             )}
 
             {submitError && <p className="text-sm text-danger-500">{submitError}</p>}
@@ -218,7 +248,7 @@ export default function UploadFlow({ shop, items }: Props) {
           billedUnits={pricing.billedUnits}
           unitLabel={selectedItem.pricing_model === 'per_page' ? (isDuplex && selectedItem.supports_duplex ? 'sheets' : 'pages') : 'item'}
           copies={copies}
-          disabled={!file || detectingPages}
+          disabled={!file || detectingPages || !selectedPages}
           submitting={submitting}
           submittingMethod={submittingMethod}
           onPayUpi={() => handleSubmit('upi')}
