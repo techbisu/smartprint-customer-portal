@@ -127,6 +127,13 @@ export default function UploadFlow({ shop, items }: Props) {
         window.location.href = data.upiIntentUrl
       }
 
+      const newJobRecord = { jobId: data.jobId, total: pricing.total }
+      try {
+        const key = `print-history-${shop.shop_name}`
+        const existing = JSON.parse(sessionStorage.getItem(key) || '[]')
+        sessionStorage.setItem(key, JSON.stringify([...existing, newJobRecord]))
+      } catch (e) {}
+
       setConfirmedJob({ jobId: data.jobId, total: pricing.total, method })
       setStage('done')
     } catch (err) {
