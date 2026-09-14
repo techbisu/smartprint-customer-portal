@@ -166,6 +166,7 @@ export default function UploadFlow({ shop, items }: Props) {
         total={confirmedJob.total}
         paymentMethod={confirmedJob.method}
         shopName={shop.shop_name}
+        shopUpiVpa={shop.upi_vpa}
         onPrintAnother={resetFlow}
       />
     )

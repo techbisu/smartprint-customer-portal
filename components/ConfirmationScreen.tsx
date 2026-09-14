@@ -9,6 +9,7 @@ interface Props {
   total: number
   paymentMethod: PaymentMethod
   shopName: string
+  shopUpiVpa: string
   onPrintAnother: () => void
 }
 
@@ -17,7 +18,7 @@ interface SessionJob {
   total: number
 }
 
-export default function ConfirmationScreen({ jobId, total, paymentMethod, shopName, onPrintAnother }: Props) {
+export default function ConfirmationScreen({ jobId, total, paymentMethod, shopName, shopUpiVpa, onPrintAnother }: Props) {
   const [sessionJobs, setSessionJobs] = useState<SessionJob[]>([])
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function ConfirmationScreen({ jobId, total, paymentMethod, shopNa
 
   const sessionTotal = sessionJobs.reduce((acc, job) => acc + job.total, 0)
   const isMultiple = sessionJobs.length > 1
+  const upiIntentUrl = isMultiple ? `upi://pay?pa=${shopUpiVpa}&pn=${encodeURIComponent(shopName)}&am=${sessionTotal.toFixed(2)}&tn=${encodeURIComponent(`Prints-${sessionJobs.length}-Session`)}&cu=INR` : ''
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
@@ -51,8 +53,14 @@ export default function ConfirmationScreen({ jobId, total, paymentMethod, shopNa
             You have sent {sessionJobs.length} print jobs this session.
           </p>
           <p className="mt-2 text-sm font-semibold">
-            Total to pay at counter: {formatRupees(sessionTotal)}
+            Total to pay: {formatRupees(sessionTotal)}
           </p>
+          <a
+            href={upiIntentUrl}
+            className="mt-4 block w-full rounded-lg bg-brand-600 py-2.5 text-center text-sm font-medium text-white shadow-sm hover:bg-brand-700 active:scale-[0.98] transition-all"
+          >
+            Pay Total via UPI
+          </a>
         </div>
       )}
 
