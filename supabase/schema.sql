@@ -97,6 +97,41 @@ create policy "Public can read prints"
     on storage.objects for select
     using (bucket_id = 'print-uploads');
 
+-- Storage cleanup trigger ------------------------------------------------------
+-- When a print job's status changes to 'COMPLETED', delete the corresponding
+-- uploaded file from the storage bucket to free up space.
+
+-- Clean up old trigger/function if it exists
+drop trigger if exists trigger_delete_print_job_file on print_jobs;
+drop function if exists delete_storage_object();
+
+create or replace function delete_storage_object_on_complete()
+returns trigger as $$
+declare
+    file_path text;
+begin
+    if NEW.print_status = 'COMPLETED' and OLD.print_status is distinct from 'COMPLETED' then
+        -- Extract the object path from the public URL (everything after 'print-uploads/')
+        file_path := split_part(NEW.file_url, 'print-uploads/', 2);
+
+        if file_path is not null and file_path != '' then
+            delete from storage.objects
+            where bucket_id = 'print-uploads' and name = file_path;
+        end if;
+    end if;
+
+    return NEW;
+end;
+$$ language plpgsql security definer;
+
+-- Drop the trigger if it exists to allow re-running this script easily
+drop trigger if exists trigger_delete_print_job_file_on_complete on print_jobs;
+
+create trigger trigger_delete_print_job_file_on_complete
+after update of print_status on print_jobs
+for each row
+execute function delete_storage_object_on_complete();
+
 -- Example seed data for local testing — replace with your real shop.
 -- insert into shops (slug, shop_name, upi_vpa, agent_auth_token)
 -- values ('demo-shop', 'Demo Print & Xerox', 'demoshop@upi', 'replace-with-a-long-random-token');
