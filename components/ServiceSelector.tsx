@@ -2,6 +2,7 @@
 
 import { RateCardItem } from '@/lib/types'
 import { formatRupees } from '@/lib/pricing'
+import { ArrowRight, Sparkles, Layers, FileText } from 'lucide-react'
 
 interface Props {
   items: RateCardItem[]
@@ -12,24 +13,61 @@ export default function ServiceSelector({ items, onSelect }: Props) {
   const categories = Array.from(new Set(items.map((i) => i.category)))
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {categories.map((category) => (
-        <section key={category}>
-          <h2 className="mb-2 text-sm font-medium text-muted">{category}</h2>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <section key={category} className="space-y-2">
+          <div className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-600" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted">{category}</h3>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2.5">
             {items
-              .filter((i) => i.category === category)
+              .filter((i) => i.category === category && i.is_active !== false)
               .map((item) => (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => onSelect(item)}
-                  className="flex items-center justify-between rounded-card border border-line bg-white px-4 py-3.5 text-left transition-colors hover:border-brand-400 active:bg-brand-50"
+                  className="group flex items-center justify-between rounded-xl border border-line bg-white p-3.5 text-left transition-all hover:border-brand-400 hover:shadow-xs active:scale-[0.99] active:bg-brand-50/50 cursor-pointer"
                 >
-                  <span className="text-sm font-medium">{item.display_name}</span>
-                  <span className="whitespace-nowrap text-sm text-muted">
-                    {formatRupees(item.price_bw)}
-                    {item.pricing_model === 'per_page' && '/pg'}
-                  </span>
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-paper group-hover:bg-brand-50 group-hover:text-brand-700 text-muted transition-colors">
+                      <FileText className="h-4 w-4" />
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-ink truncate leading-tight">
+                        {item.display_name}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted">
+                        <span>
+                          From <strong className="text-ink">{formatRupees(item.price_bw)}</strong>
+                          {item.pricing_model === 'per_page' ? '/page' : ''}
+                        </span>
+                        {item.price_color !== null && (
+                          <>
+                            <span>&middot;</span>
+                            <span className="text-brand-600 font-medium">
+                              Color {formatRupees(item.price_color)}
+                            </span>
+                          </>
+                        )}
+                        {item.supports_duplex && (
+                          <>
+                            <span>&middot;</span>
+                            <span className="text-[10px] bg-paper px-1.5 py-0.5 rounded border border-line/60">
+                              Duplex
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-muted group-hover:bg-brand-600 group-hover:text-white transition-all ml-2">
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
                 </button>
               ))}
           </div>

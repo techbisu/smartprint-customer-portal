@@ -9,8 +9,12 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: 'SmartPrint',
-  description: 'Scan, upload, print — no app, no login.',
+  title: 'SmartPrint Customer Portal',
+  description: 'Scan, upload, print — mobile-first print shop customer portal for picking services, uploading files, calculating prices, and paying.',
+  openGraph: {
+    title: 'SmartPrint Customer Portal',
+    description: 'Scan, upload, print — mobile-first print shop customer portal for picking services, uploading files, calculating prices, and paying.',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

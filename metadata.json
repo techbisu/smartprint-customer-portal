@@ -1,0 +1,6 @@
+{
+  "name": "SmartPrint Customer Portal",
+  "description": "Scan, upload, print — mobile-first print shop customer portal for picking services, uploading files, calculating prices, and paying.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
