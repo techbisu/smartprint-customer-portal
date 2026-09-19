@@ -178,7 +178,7 @@ export default function QRStickerGenerator({ shop }: Props) {
   return (
     <div className="space-y-6">
       {/* Printable CSS styles */}
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           body * {
             visibility: hidden;
@@ -192,16 +192,17 @@ export default function QRStickerGenerator({ shop }: Props) {
             left: 0;
             top: 0;
             width: 100%;
-            margin: 0;
-            padding: 0;
+            margin: 0 !important;
+            padding: 0 !important;
             box-shadow: none !important;
             border-radius: 0 !important;
+            border: none !important;
           }
           .no-print {
             display: none !important;
           }
         }
-      `}</style>
+      `}} />
 
       {/* Top Controls Header */}
       <div className="no-print flex flex-wrap items-center justify-between gap-3">

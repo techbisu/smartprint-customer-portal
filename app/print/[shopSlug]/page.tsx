@@ -126,6 +126,8 @@ async function getShopData(
   }
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function ShopPrintPage({
   params,
 }: {

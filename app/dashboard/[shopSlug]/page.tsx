@@ -54,6 +54,8 @@ async function getAdminData(slug: string): Promise<{
   }
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function ShopDashboardPage({
   params,
 }: {
