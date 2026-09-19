@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
+import { toPng } from 'html-to-image'
+import { jsPDF } from 'jspdf'
 import { Shop } from '@/lib/types'
 import {
   Printer,
@@ -21,6 +23,7 @@ import {
   Zap,
   Info,
   QrCode as QrCodeIcon,
+  Loader2,
 } from 'lucide-react'
 
 interface Props {
@@ -40,6 +43,7 @@ export default function QRStickerGenerator({ shop }: Props) {
   const [qrDataUrl, setQrDataUrl] = useState<string>('')
   const [copiedLink, setCopiedLink] = useState(false)
   const [showCropMarks, setShowCropMarks] = useState(true)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
 
   const stickerRef = useRef<HTMLDivElement>(null)
 
@@ -52,13 +56,12 @@ export default function QRStickerGenerator({ shop }: Props) {
   useEffect(() => {
     async function generateQR() {
       try {
-        const darkColor =
-          theme === 'clean-white' || theme === 'vibrant-yellow' ? '#16181D' : '#16181D'
+        const darkColor = '#16181D'
         const lightColor = '#FFFFFF'
 
         const url = await QRCode.toDataURL(portalUrl, {
-          width: 600,
-          margin: 1.5,
+          width: 800,
+          margin: 1,
           errorCorrectionLevel: 'H',
           color: {
             dark: darkColor,
@@ -71,7 +74,7 @@ export default function QRStickerGenerator({ shop }: Props) {
       }
     }
     generateQR()
-  }, [portalUrl, theme])
+  }, [portalUrl])
 
   const copyCustomerLink = () => {
     navigator.clipboard.writeText(portalUrl)
@@ -81,6 +84,42 @@ export default function QRStickerGenerator({ shop }: Props) {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const downloadPdf = async () => {
+    if (!stickerRef.current) return
+    setIsGeneratingPdf(true)
+
+    try {
+      // Use html-to-image to get a high-quality PNG first
+      // We use a high pixel ratio for "high-resolution" requirement
+      const dataUrl = await toPng(stickerRef.current, {
+        pixelRatio: 3,
+        skipFonts: false,
+        fontEmbedCSS: '',
+      })
+
+      const pdf = new jsPDF({
+        orientation: size === 'glass-decal' ? 'landscape' : 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      })
+
+      const imgProps = pdf.getImageProperties(dataUrl)
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+
+      // Center the sticker on the A4 page
+      const x = (pdf.internal.pageSize.getWidth() - pdfWidth) / 2
+      const y = (pdf.internal.pageSize.getHeight() - pdfHeight) / 2
+
+      pdf.addImage(dataUrl, 'PNG', x, y, pdfWidth, pdfHeight)
+      pdf.save(`${shop.slug}-print-sticker.pdf`)
+    } catch (err) {
+      console.error('PDF Generation failed', err)
+    } finally {
+      setIsGeneratingPdf(false)
+    }
   }
 
   // Theme styling helpers
@@ -194,11 +233,30 @@ export default function QRStickerGenerator({ shop }: Props) {
 
           <button
             type="button"
+            onClick={downloadPdf}
+            disabled={isGeneratingPdf}
+            className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-brand-700 transition-all cursor-pointer disabled:opacity-50"
+          >
+            {isGeneratingPdf ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                <span>Generate High-Res PDF</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={handlePrint}
-            className="flex items-center gap-1.5 rounded-xl bg-ink px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-black transition-all cursor-pointer"
+            className="flex items-center gap-1.5 rounded-xl border border-ink px-4 py-2 text-xs font-bold text-ink hover:bg-paper transition-all cursor-pointer"
           >
             <Printer className="h-4 w-4" />
-            <span>Print Sticker</span>
+            <span>Browser Print</span>
           </button>
         </div>
       </div>

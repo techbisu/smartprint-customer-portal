@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
+    "html-to-image": "^1.11.13",
     "js-md5": "^0.8.3",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.47.0",
     "next": "15.5.25",
     "pdfjs-dist": "4.4.168",
