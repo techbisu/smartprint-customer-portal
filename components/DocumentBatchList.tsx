@@ -13,6 +13,7 @@ import { formatRupees, PricingBreakdown } from '@/lib/pricing'
 import { RateCardItem } from '@/lib/types'
 import { PageSelectionMode } from '@/lib/pageSelection'
 import { LegalStampSettings } from '@/components/LegalStampModal'
+import { Language, translations } from '@/lib/translations'
 
 export interface DocumentItem {
   id: string
@@ -37,6 +38,7 @@ interface Props {
   onRemoveDoc: (id: string) => void
   onAddAnotherClick: () => void
   isAddingNew?: boolean
+  language?: Language
 }
 
 export default function DocumentBatchList({
@@ -46,8 +48,10 @@ export default function DocumentBatchList({
   onRemoveDoc,
   onAddAnotherClick,
   isAddingNew = false,
+  language = 'en',
 }: Props) {
   if (documents.length === 0) return null
+  const t = translations[language] || translations.en
 
   const totalAmount = documents.reduce((sum, doc) => sum + doc.pricing.total, 0)
   const totalPages = documents.reduce((sum, doc) => sum + (doc.pricing.billedUnits * doc.copies), 0)
@@ -75,21 +79,21 @@ export default function DocumentBatchList({
         <div>
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-bold uppercase tracking-wider text-ink">
-              Your Documents to Print ({documents.length})
+              {t.docsToPrint} ({documents.length})
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
               <Sparkles className="h-3 w-3" />
-              1 Combined Bill
+              {t.combinedBill}
             </span>
           </div>
           <p className="text-[11px] text-muted mt-0.5">
-            Tap any document to adjust copies or color options
+            {t.tapDocToAdjust}
           </p>
         </div>
 
         <div className="text-right">
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
-            Merged Total
+            {t.mergedTotal}
           </span>
           <span className="text-sm font-black text-brand-700">
             {formatRupees(totalAmount)}
@@ -228,7 +232,7 @@ export default function DocumentBatchList({
         className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-brand-300 bg-brand-50/40 hover:bg-brand-50 hover:border-brand-500 py-3 px-4 text-xs font-bold text-brand-700 active:scale-[0.99] transition-all cursor-pointer shadow-2xs group"
       >
         <PlusCircle className="h-4 w-4 text-brand-600 group-hover:scale-110 transition-transform" />
-        <span>+ Add Another Document (Pay All Together)</span>
+        <span>{t.addAnotherDocBtn}</span>
       </button>
     </div>
   )

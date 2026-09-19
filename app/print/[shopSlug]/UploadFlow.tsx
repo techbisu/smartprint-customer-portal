@@ -96,8 +96,12 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
   const [stage, setStage] = useState<Stage>('configure')
   const [lang, setLang] = useState<Language>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('smartprint_lang') as Language
+      const saved = (localStorage.getItem(`smartprint_lang_${shop.slug}`) || localStorage.getItem('smartprint_lang')) as Language
       if (saved && (saved === 'en' || saved === 'bn' || saved === 'hi')) return saved
+    }
+    const defaultLang = shop.default_language as Language
+    if (defaultLang && (defaultLang === 'en' || defaultLang === 'bn' || defaultLang === 'hi')) {
+      return defaultLang
     }
     return 'en'
   })
@@ -105,6 +109,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
   const handleLanguageChange = (newLang: Language) => {
     setLang(newLang)
     if (typeof window !== 'undefined') {
+      localStorage.setItem(`smartprint_lang_${shop.slug}`, newLang)
       localStorage.setItem('smartprint_lang', newLang)
     }
   }
@@ -1102,6 +1107,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
               <DocumentBatchList
                 documents={documents}
                 activeDocId={activeDocId}
+                language={lang}
                 onSelectDoc={handleSelectDoc}
                 onRemoveDoc={handleRemoveDoc}
                 onAddAnotherClick={handleAddAnother}
@@ -1158,6 +1164,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
                   pages={pages}
                   detectingPages={detectingPages}
                   error={fileError}
+                  language={lang}
                 />
               </div>
             )}
@@ -1187,6 +1194,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
                     mode={pageSelectionMode}
                     customPages={customPages}
                     error={pageSelectionError}
+                    language={lang}
                     onModeChange={handlePageModeChange}
                     onCustomPagesChange={handleCustomPagesChange}
                   />
@@ -1197,6 +1205,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
                   copies={copies}
                   isColor={isColor}
                   isDuplex={isDuplex}
+                  language={lang}
                   onCopiesChange={handleCopiesChange}
                   onColorChange={handleColorChange}
                   onDuplexChange={handleDuplexChange}
@@ -1229,6 +1238,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
         <PriceBar
           total={grandTotal}
           billedUnits={grandBilledUnits}
+          language={lang}
           unitLabel={
             documents.length > 1
               ? 'pages'
@@ -1367,6 +1377,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
             <div className="p-4 overflow-y-auto space-y-3">
               <ServiceSelector
                 items={availableItems}
+                language={lang}
                 onSelect={(it) => {
                   selectService(it)
                   setShowAllServicesModal(false)

@@ -29,6 +29,7 @@ create table if not exists shops (
     cashfree_app_id varchar(255),
     cashfree_secret_key varchar(255),
     cashfree_env varchar(32) default 'sandbox',
+    default_language varchar(10) default 'en',
     created_at timestamp with time zone default now()
 );
 

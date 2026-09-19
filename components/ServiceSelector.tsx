@@ -2,14 +2,17 @@
 
 import { RateCardItem } from '@/lib/types'
 import { formatRupees } from '@/lib/pricing'
+import { Language, translations } from '@/lib/translations'
 import { ArrowRight, Sparkles, Layers, FileText } from 'lucide-react'
 
 interface Props {
   items: RateCardItem[]
+  language?: Language
   onSelect: (item: RateCardItem) => void
 }
 
-export default function ServiceSelector({ items, onSelect }: Props) {
+export default function ServiceSelector({ items, language = 'en', onSelect }: Props) {
+  const t = translations[language] || translations.en
   const categories = Array.from(new Set(items.map((i) => i.category)))
 
   return (
@@ -42,14 +45,14 @@ export default function ServiceSelector({ items, onSelect }: Props) {
                       </p>
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted">
                         <span>
-                          From <strong className="text-ink">{formatRupees(item.price_bw)}</strong>
-                          {item.pricing_model === 'per_page' ? '/page' : ''}
+                          {t.fromPrice} <strong className="text-ink">{formatRupees(item.price_bw)}</strong>
+                          {item.pricing_model === 'per_page' ? t.perPageSuffix : ''}
                         </span>
                         {item.price_color !== null && (
                           <>
                             <span>&middot;</span>
                             <span className="text-brand-600 font-medium">
-                              Color {formatRupees(item.price_color)}
+                              {t.colorBadge} {formatRupees(item.price_color)}
                             </span>
                           </>
                         )}
@@ -57,7 +60,7 @@ export default function ServiceSelector({ items, onSelect }: Props) {
                           <>
                             <span>&middot;</span>
                             <span className="text-[10px] bg-paper px-1.5 py-0.5 rounded border border-line/60">
-                              Duplex
+                              {t.duplexBadge}
                             </span>
                           </>
                         )}

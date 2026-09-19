@@ -20,6 +20,7 @@ export interface Shop {
   pusher_key?: string
   pusher_secret?: string
   pusher_cluster?: string
+  default_language?: 'en' | 'bn' | 'hi' | string
   created_at?: string
 }
 

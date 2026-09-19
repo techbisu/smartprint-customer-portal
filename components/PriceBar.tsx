@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { formatRupees } from '@/lib/pricing'
+import { Language, translations } from '@/lib/translations'
 import {
   ArrowRight,
   Loader2,
@@ -42,6 +43,7 @@ interface PriceBarProps {
   submittingMethod?: 'upi' | 'counter' | 'cashfree'
   itemsCount?: number
   itemsBreakdown?: BreakdownItem[]
+  language?: Language
   onPayClick: () => void
   onUploadClick?: () => void
 }
@@ -64,9 +66,11 @@ export default function PriceBar({
   submittingMethod,
   itemsCount = 1,
   itemsBreakdown,
+  language = 'en',
   onPayClick,
   onUploadClick,
 }: PriceBarProps) {
+  const t = translations[language] || translations.en
   const [showBreakdown, setShowBreakdown] = useState(false)
   const breakdownRef = useRef<HTMLDivElement>(null)
 
@@ -239,21 +243,21 @@ export default function PriceBar({
               >
                 {!hasFile ? (
                   <span className="inline-flex items-center gap-1 rounded bg-brand-50 text-brand-700 font-bold px-1.5 py-0.2 text-[10px]">
-                    Estimate
+                    {t.estimateBadge}
                   </span>
                 ) : null}
 
                 <span className="truncate font-medium">
                   {itemsCount > 1 ? (
                     <span className="text-brand-700 font-bold">
-                      {itemsCount} Documents &bull; {billedUnits} Pages
+                      {itemsCount} {t.docsMerged} &bull; {billedUnits} {t.pagesWord}
                     </span>
                   ) : (
                     <>
                       {billedUnits} {unitLabel}
-                      {copies > 1 ? ` \u00D7 ${copies}` : ''}
-                      {isColor ? ' \u2022 Color' : ' \u2022 B&W'}
-                      {isDuplex ? ' \u2022 2-Sided' : ''}
+                      {copies > 1 ? ` \u00D7 ${copies} ${t.copiesWord}` : ''}
+                      {isColor ? ` \u2022 ${t.colorBadge}` : ' \u2022 B&W'}
+                      {isDuplex ? ` \u2022 ${t.duplexBadge}` : ''}
                     </>
                   )}
                 </span>
@@ -276,13 +280,13 @@ export default function PriceBar({
 
               {!isOnline && (
                 <span className="text-[10px] font-bold text-danger-600 bg-danger-50 px-1.5 py-0.5 rounded border border-danger-200">
-                  Shop Paused
+                  {t.shopPausedBadge}
                 </span>
               )}
 
               {detectingPages && (
                 <span className="text-[10px] font-medium text-brand-600 animate-pulse">
-                  Analyzing…
+                  {t.analyzing}
                 </span>
               )}
             </div>
@@ -303,7 +307,7 @@ export default function PriceBar({
             }`}
           >
             {!isOnline ? (
-              <span className="text-xs sm:text-sm">Shop Offline</span>
+              <span className="text-xs sm:text-sm">{t.shopOffline}</span>
             ) : submitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -312,24 +316,24 @@ export default function PriceBar({
                     ? 'Cashfree…'
                     : submittingMethod === 'upi'
                     ? 'UPI App…'
-                    : 'Sending…'}
+                    : t.sendingBtn}
                 </span>
               </>
             ) : detectingPages ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-xs sm:text-sm">Reading Pages…</span>
+                <span className="text-xs sm:text-sm">{t.readingPagesBadge}</span>
               </>
             ) : !hasFile ? (
               <>
                 <Upload className="h-4 w-4 text-white" />
-                <span className="text-xs sm:text-sm">Upload File</span>
+                <span className="text-xs sm:text-sm">{t.uploadFileBtn}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </>
             ) : (
               <>
                 <span>
-                  Pay {formatRupees(total)}
+                  {t.payBtn} {formatRupees(total)}
                   {itemsCount > 1 ? ` (${itemsCount})` : ''}
                 </span>
                 <ArrowRight className="h-4 w-4" />

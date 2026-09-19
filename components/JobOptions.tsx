@@ -2,6 +2,7 @@
 
 import { RateCardItem } from '@/lib/types'
 import { formatRupees } from '@/lib/pricing'
+import { Language, translations } from '@/lib/translations'
 import { Palette, Copy, Layers } from 'lucide-react'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
   copies: number
   isColor: boolean
   isDuplex: boolean
+  language?: Language
   onCopiesChange: (n: number) => void
   onColorChange: (v: boolean) => void
   onDuplexChange: (v: boolean) => void
@@ -19,10 +21,12 @@ export default function JobOptions({
   copies,
   isColor,
   isDuplex,
+  language = 'en',
   onCopiesChange,
   onColorChange,
   onDuplexChange,
 }: Props) {
+  const t = translations[language] || translations.en
   return (
     <div className="divide-y divide-line rounded-2xl border border-line bg-white shadow-2xs overflow-hidden">
       {/* Number of Copies */}
@@ -32,8 +36,8 @@ export default function JobOptions({
             <Copy className="h-4 w-4" />
           </div>
           <div>
-            <span className="text-sm font-bold text-ink block">Number of Copies</span>
-            <span className="text-[11px] text-muted">Total set multiplier</span>
+            <span className="text-sm font-bold text-ink block">{t.numberOfCopies}</span>
+            <span className="text-[11px] text-muted">{t.totalMultiplier}</span>
           </div>
         </div>
 
@@ -66,9 +70,9 @@ export default function JobOptions({
               <Palette className="h-4 w-4" />
             </div>
             <div>
-              <span className="text-sm font-bold text-ink block">Color Print</span>
+              <span className="text-sm font-bold text-ink block">{t.colorPrintTitle}</span>
               <span className="text-[11px] text-muted">
-                {formatRupees(item.price_color)}/unit vs {formatRupees(item.price_bw)} B&W
+                {formatRupees(item.price_color)}/unit vs {formatRupees(item.price_bw)} {t.blackAndWhite}
               </span>
             </div>
           </div>
@@ -89,8 +93,8 @@ export default function JobOptions({
               <Layers className="h-4 w-4" />
             </div>
             <div>
-              <span className="text-sm font-bold text-ink block">Double-Sided (Duplex)</span>
-              <span className="text-[11px] text-muted">Prints on both sides of each sheet</span>
+              <span className="text-sm font-bold text-ink block">{t.duplexTitle}</span>
+              <span className="text-[11px] text-muted">{t.duplexDesc}</span>
             </div>
           </div>
           <input

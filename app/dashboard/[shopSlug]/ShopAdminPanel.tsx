@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { RateCardItem, Shop, ShopBanner } from '@/lib/types'
 import { formatRupees } from '@/lib/pricing'
+import { supabaseBrowser, UPLOAD_BUCKET } from '@/lib/supabaseBrowser'
 import BannerSlider from '@/components/BannerSlider'
 import QRStickerGenerator from '@/components/QRStickerGenerator'
 import AgentStatusIndicator from '@/components/AgentStatusIndicator'
@@ -41,6 +42,9 @@ import {
   RefreshCw,
   Key,
   HelpCircle,
+  Image as ImageIcon,
+  Upload,
+  Loader2,
 } from 'lucide-react'
 
 interface Props {
@@ -95,6 +99,46 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
   const [bannerBadge, setBannerBadge] = useState('OFFER')
   const [bannerBadgeColor, setBannerBadgeColor] = useState<'marigold' | 'brand' | 'success' | 'accent' | 'danger'>('marigold')
   const [bannerGradient, setBannerGradient] = useState('from-[#2C3A6B] via-[#212C52] to-[#16181D]')
+  const [bannerImageUrl, setBannerImageUrl] = useState('')
+  const [isUploadingBannerImg, setIsUploadingBannerImg] = useState(false)
+  const bannerImageInputRef = useRef<HTMLInputElement>(null)
+
+  const sanitizeImageUrl = (url: string) => {
+    let clean = url.trim()
+    const srcMatch = clean.match(/src=["'](https?:\/\/[^"']+)["']/)
+    if (srcMatch) clean = srcMatch[1]
+    return clean
+  }
+
+  const handleUploadBannerImage = async (file: File) => {
+    if (!file) return
+    setIsUploadingBannerImg(true)
+    try {
+      const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+      const path = `banners/${shop.id}/${Date.now()}-${cleanName}`
+      const { error: uploadError } = await supabaseBrowser.storage
+        .from(UPLOAD_BUCKET)
+        .upload(path, file, { cacheControl: '3600', upsert: true })
+
+      if (uploadError) {
+        showToast('Image upload failed. You can paste an imgbb.com direct URL below.')
+        return
+      }
+
+      const { data: publicUrlData } = supabaseBrowser.storage
+        .from(UPLOAD_BUCKET)
+        .getPublicUrl(path)
+
+      if (publicUrlData?.publicUrl) {
+        setBannerImageUrl(publicUrlData.publicUrl)
+        showToast('Banner image uploaded successfully!')
+      }
+    } catch {
+      showToast('Error uploading banner image')
+    } finally {
+      setIsUploadingBannerImg(false)
+    }
+  }
 
   const showToast = (msg: string) => {
     setToastMessage(msg)
@@ -306,6 +350,7 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
       badge: bannerBadge.trim() || undefined,
       badge_color: bannerBadgeColor,
       bg_gradient: bannerGradient,
+      image_url: bannerImageUrl.trim() || undefined,
       is_active: true,
     }
 
@@ -360,6 +405,7 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
     setBannerBadge(preset?.badge || 'OFFER')
     setBannerBadgeColor(preset?.badge_color || 'marigold')
     setBannerGradient(preset?.bg_gradient || 'from-[#2C3A6B] via-[#212C52] to-[#16181D]')
+    setBannerImageUrl(preset?.image_url || '')
     setShowBannerModal(true)
   }
 
@@ -370,6 +416,7 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
     setBannerBadge(banner.badge || '')
     setBannerBadgeColor(banner.badge_color || 'marigold')
     setBannerGradient(banner.bg_gradient || 'from-[#2C3A6B] via-[#212C52] to-[#16181D]')
+    setBannerImageUrl(banner.image_url || '')
     setShowBannerModal(true)
   }
 
@@ -464,6 +511,9 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
   const [editPhone, setEditPhone] = useState(shop.phone || '')
   const [editAddress, setEditAddress] = useState(shop.address || '')
   const [editPassword, setEditPassword] = useState('')
+  const [editDefaultLanguage, setEditDefaultLanguage] = useState<'en' | 'bn' | 'hi'>(
+    (shop.default_language as 'en' | 'bn' | 'hi') || 'en'
+  )
 
   // Cashfree API Configuration
   const [cashfreeAppId, setCashfreeAppId] = useState(shop.cashfree_app_id || '')
@@ -502,11 +552,12 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const payload: Record<string, string> = {
+      const payload: Record<string, any> = {
         shop_name: editShopName,
         upi_vpa: editUpi,
         phone: editPhone,
         address: editAddress,
+        default_language: editDefaultLanguage,
       }
       if (editPassword.trim()) {
         payload.password = editPassword.trim()
@@ -924,11 +975,19 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
                   >
                     <div className="flex items-start gap-3">
                       <div
-                        className={`h-12 w-12 flex-shrink-0 rounded-xl bg-gradient-to-br ${
+                        className={`h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br ${
                           banner.bg_gradient || 'from-[#2C3A6B] to-[#16181D]'
-                        } flex items-center justify-center text-white font-bold text-xs shadow-xs`}
+                        } flex items-center justify-center text-white font-bold text-xs shadow-xs relative`}
                       >
-                        #{index + 1}
+                        {banner.image_url ? (
+                          <img
+                            src={banner.image_url}
+                            alt={banner.title}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span>#{index + 1}</span>
+                        )}
                       </div>
 
                       <div>
@@ -937,6 +996,12 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
                           {banner.badge && (
                             <span className="rounded-full bg-marigold-500/20 text-marigold-700 font-bold px-2 py-0.5 text-[10px]">
                               {banner.badge}
+                            </span>
+                          )}
+                          {banner.image_url && (
+                            <span className="rounded-full bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 text-[10px] border border-blue-200 inline-flex items-center gap-1">
+                              <ImageIcon className="h-2.5 w-2.5" />
+                              Image
                             </span>
                           )}
                         </div>
@@ -1035,6 +1100,39 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
                       className="w-full rounded-xl border border-line bg-white px-3 py-2 text-xs text-ink focus:outline-none"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-ink mb-1">
+                    Default Customer Language
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'en', label: 'English', sub: 'Default' },
+                      { id: 'bn', label: 'বাংলা', sub: 'Bengali' },
+                      { id: 'hi', label: 'हिंदी', sub: 'Hindi' },
+                    ].map((langOption) => {
+                      const isSelected = editDefaultLanguage === langOption.id
+                      return (
+                        <button
+                          key={langOption.id}
+                          type="button"
+                          onClick={() => setEditDefaultLanguage(langOption.id as 'en' | 'bn' | 'hi')}
+                          className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-brand-600 bg-brand-50/70 text-brand-900 font-bold shadow-xs'
+                              : 'border-line bg-white text-muted hover:bg-paper hover:text-ink'
+                          }`}
+                        >
+                          <span className="text-sm font-bold">{langOption.label}</span>
+                          <span className="text-[10px] opacity-80">{langOption.sub}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p className="text-[11px] text-muted mt-1">
+                    Customers visiting your print portal will see this language by default.
+                  </p>
                 </div>
 
                 <div>
@@ -1929,6 +2027,104 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
                     <option value="danger">Crimson Red</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Optional Image Banner (imgbb.com or direct upload) */}
+              <div className="rounded-xl border border-line bg-paper/60 p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-brand-600" />
+                    <div>
+                      <span className="text-xs font-bold text-ink block">
+                        Optional Banner Image (ImgBB / URL / Upload)
+                      </span>
+                      <span className="text-[10px] text-muted">
+                        Paste an image link from imgbb.com or upload directly from device
+                      </span>
+                    </div>
+                  </div>
+                  {bannerImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setBannerImageUrl('')}
+                      className="text-[11px] text-danger-600 hover:underline font-semibold cursor-pointer"
+                    >
+                      Remove Image
+                    </button>
+                  )}
+                </div>
+
+                {/* Hidden native image input */}
+                <input
+                  ref={bannerImageInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleUploadBannerImage(file)
+                  }}
+                />
+
+                {/* Input and upload action buttons */}
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={bannerImageUrl}
+                    onChange={(e) => setBannerImageUrl(sanitizeImageUrl(e.target.value))}
+                    placeholder="https://i.ibb.co/xyz/banner.jpg"
+                    className="flex-1 rounded-xl border border-line bg-white px-3 py-2 text-xs text-ink focus:border-brand-600 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    disabled={isUploadingBannerImg}
+                    onClick={() => bannerImageInputRef.current?.click()}
+                    className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50 transition-colors cursor-pointer shadow-2xs whitespace-nowrap disabled:opacity-60"
+                  >
+                    {isUploadingBannerImg ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Upload className="h-3.5 w-3.5" />
+                    )}
+                    <span>{isUploadingBannerImg ? 'Uploading…' : 'Choose File'}</span>
+                  </button>
+                </div>
+
+                {/* Direct ImgBB Quick Helper Link */}
+                <div className="flex items-center justify-between text-[10px] text-muted pt-0.5">
+                  <span>Supported: ImgBB, Supabase Storage, or direct image link (.jpg, .png, .webp)</span>
+                  <a
+                    href="https://imgbb.com/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-brand-600 font-semibold hover:underline inline-flex items-center gap-0.5"
+                  >
+                    <span>Open ImgBB.com</span>
+                    <ExternalLink className="h-2.5 w-2.5" />
+                  </a>
+                </div>
+
+                {/* Live Preview if Image URL is active */}
+                {bannerImageUrl && (
+                  <div className="relative h-24 w-full rounded-xl overflow-hidden border border-line shadow-xs">
+                    <img
+                      src={bannerImageUrl}
+                      alt="Banner Preview"
+                      referrerPolicy="no-referrer"
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2.5 flex flex-col justify-end">
+                      <span className="text-white font-bold text-xs truncate drop-shadow-xs">
+                        {bannerTitle || 'Preview Title'}
+                      </span>
+                      {bannerSubtitle && (
+                        <span className="text-white/80 text-[10px] truncate">
+                          {bannerSubtitle}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

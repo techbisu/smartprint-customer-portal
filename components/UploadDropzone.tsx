@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { MAX_UPLOAD_BYTES } from '@/lib/supabaseBrowser'
+import { Language, translations } from '@/lib/translations'
 import {
   UploadCloud,
   FileText,
@@ -28,6 +29,7 @@ interface Props {
   pages?: number
   detectingPages?: boolean
   isUploading?: boolean
+  language?: Language
 }
 
 export default function UploadDropzone({
@@ -42,7 +44,9 @@ export default function UploadDropzone({
   pages = 1,
   detectingPages = false,
   isUploading = false,
+  language = 'en',
 }: Props) {
+  const t = translations[language] || translations.en
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [uploadPercent, setUploadPercent] = useState<number | null>(null)
@@ -163,7 +167,7 @@ export default function UploadDropzone({
                 <Loader2 className="h-4 w-4 animate-spin" />
               </div>
               <div>
-                <p className="text-xs font-bold text-ink">Uploading Document...</p>
+                <p className="text-xs font-bold text-ink">{t.uploadingDocText}</p>
                 <p className="text-[11px] text-muted">{uploadStatusMessage}</p>
               </div>
             </div>
@@ -199,12 +203,12 @@ export default function UploadDropzone({
                   {detectingPages ? (
                     <span className="inline-flex items-center gap-1 text-brand-700 font-medium">
                       <Loader2 className="h-3 w-3 animate-spin" />
-                      Counting pages...
+                      {t.countingPagesText}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 text-[11px]">
                       <FileCheck className="h-3 w-3 text-emerald-600" />
-                      {pages} {pages === 1 ? 'Page' : 'Pages'}
+                      {pages} {pages === 1 ? t.pageWord : t.pagesWord}
                     </span>
                   )}
                 </div>
@@ -220,7 +224,7 @@ export default function UploadDropzone({
                 title="Choose a different file"
               >
                 <RefreshCw className="h-3 w-3" />
-                <span>Replace</span>
+                <span>{t.replaceFile}</span>
               </button>
 
               {onClear && (
@@ -271,20 +275,20 @@ export default function UploadDropzone({
 
           <h3 className="mt-3.5 text-sm font-bold text-ink">
             {dragging
-              ? 'Drop your document here'
+              ? t.dropDocHere
               : documentNumber && documentNumber > 1
-              ? `Tap to Upload Document ${documentNumber}`
-              : 'Tap to Upload Document'}
+              ? `${t.tapToUploadDoc} ${documentNumber}`
+              : t.tapToUploadDoc}
           </h3>
           <p className="mt-1 text-xs text-muted max-w-[280px]">
             {documentNumber && documentNumber > 1
-              ? 'Add another PDF or Image &bull; Max 40 MB'
-              : 'Drag & drop or tap here \u2022 PDF & Images (Max 40 MB)'}
+              ? t.addAnotherLimit
+              : t.dragAndDropLimits}
           </p>
 
           {/* Browse button CTA */}
           <div className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-2xs group-hover:bg-brand-700 transition-colors">
-            <span>Browse Files</span>
+            <span>{t.browseFiles}</span>
           </div>
 
           {/* Quick Supported format badges: PDF and Images only, no docx */}

@@ -81,6 +81,56 @@ export interface TranslationDictionary {
   jobToken: string
   statusQueued: string
   printAnother: string
+
+  // Detailed options & controls
+  totalMultiplier: string
+  colorPrintTitle: string
+  duplexTitle: string
+  duplexDesc: string
+
+  // Page selection options
+  pagesToPrint: string
+  oddPages: string
+  evenPages: string
+  specificPages: string
+  pageRangeHelp: string
+
+  // Dropzone options
+  tapToUploadDoc: string
+  tapToUploadDocNum: string
+  dropDocHere: string
+  dragAndDropLimits: string
+  addAnotherLimit: string
+  replaceFile: string
+  countingPagesText: string
+  uploadingDocText: string
+
+  // PriceBar & Bottom checkout
+  estimateBadge: string
+  shopPausedBadge: string
+  shopOffline: string
+  analyzing: string
+  readingPagesBadge: string
+  uploadFileBtn: string
+  payBtn: string
+  sendingBtn: string
+  docsMerged: string
+  pagesWord: string
+  pageWord: string
+  copiesWord: string
+
+  // Batch queue
+  docsToPrint: string
+  combinedBill: string
+  tapDocToAdjust: string
+  mergedTotal: string
+  addAnotherDocBtn: string
+
+  // Service selector cards
+  fromPrice: string
+  perPageSuffix: string
+  colorBadge: string
+  duplexBadge: string
 }
 
 export const translations: Record<Language, TranslationDictionary> = {
@@ -157,6 +207,56 @@ export const translations: Record<Language, TranslationDictionary> = {
     jobToken: 'Order Job Token',
     statusQueued: 'Status: Queued for Printing',
     printAnother: 'Print Another Document',
+
+    // Detailed options & controls
+    totalMultiplier: 'Total set multiplier',
+    colorPrintTitle: 'Color Print',
+    duplexTitle: 'Double-Sided (Duplex)',
+    duplexDesc: 'Prints on both sides of each sheet',
+
+    // Page selection options
+    pagesToPrint: 'Pages to print',
+    oddPages: 'Odd pages',
+    evenPages: 'Even pages',
+    specificPages: 'Specific pages',
+    pageRangeHelp: 'Use individual pages or ranges, separated by commas.',
+
+    // Dropzone options
+    tapToUploadDoc: 'Tap to Upload Document',
+    tapToUploadDocNum: 'Tap to Upload Document',
+    dropDocHere: 'Drop your document here',
+    dragAndDropLimits: 'Drag & drop or tap here • PDF & Images (Max 40 MB)',
+    addAnotherLimit: 'Add another PDF or Image • Max 40 MB',
+    replaceFile: 'Replace',
+    countingPagesText: 'Counting pages...',
+    uploadingDocText: 'Uploading Document...',
+
+    // PriceBar & Bottom checkout
+    estimateBadge: 'Estimate',
+    shopPausedBadge: 'Shop Paused',
+    shopOffline: 'Shop Offline',
+    analyzing: 'Analyzing…',
+    readingPagesBadge: 'Reading Pages…',
+    uploadFileBtn: 'Upload File',
+    payBtn: 'Pay',
+    sendingBtn: 'Sending…',
+    docsMerged: 'Documents',
+    pagesWord: 'Pages',
+    pageWord: 'Page',
+    copiesWord: 'copies',
+
+    // Batch queue
+    docsToPrint: 'Your Documents to Print',
+    combinedBill: '1 Combined Bill',
+    tapDocToAdjust: 'Tap any document to adjust copies or color options',
+    mergedTotal: 'Merged Total',
+    addAnotherDocBtn: '+ Add Another Document (Pay All Together)',
+
+    // Service selector cards
+    fromPrice: 'From',
+    perPageSuffix: '/page',
+    colorBadge: 'Color',
+    duplexBadge: 'Duplex',
   },
 
   bn: {
@@ -232,6 +332,56 @@ export const translations: Record<Language, TranslationDictionary> = {
     jobToken: 'অর্ডার টোকেন নম্বর',
     statusQueued: 'অবস্থা: প্রিন্টিং অপেক্ষায় রয়েছে',
     printAnother: 'আরেকটি নথি প্রিন্ট করুন',
+
+    // Detailed options & controls
+    totalMultiplier: 'মোট কপির গুণক',
+    colorPrintTitle: 'রঙিন প্রিন্ট (Color Print)',
+    duplexTitle: 'উভয় পিঠ প্রিন্ট (Duplex)',
+    duplexDesc: 'কাগজের উভয় পিঠে প্রিন্ট করা হবে',
+
+    // Page selection options
+    pagesToPrint: 'যে পৃষ্ঠাগুলি প্রিন্ট করবেন',
+    oddPages: 'বিজোড় পৃষ্ঠা (Odd Pages)',
+    evenPages: 'জোড় পৃষ্ঠা (Even Pages)',
+    specificPages: 'নির্দিষ্ট পৃষ্ঠা',
+    pageRangeHelp: 'কমা দিয়ে নির্দিষ্ট পৃষ্ঠা বা রেঞ্জ লিখুন (যেমন: ১-৩, ৫, ৮-১০)',
+
+    // Dropzone options
+    tapToUploadDoc: 'ডকুমেন্ট আপলোড করতে ক্লিক করুন',
+    tapToUploadDocNum: 'ডকুমেন্ট আপলোড করতে ক্লিক করুন',
+    dropDocHere: 'আপনার ডকুমেন্ট এখানে ড্রপ করুন',
+    dragAndDropLimits: 'ড্র্যাগ ও ড্রপ অথবা ক্লিক করুন • PDF ও ছবি (সর্বোচ্চ ৪০ MB)',
+    addAnotherLimit: 'আরেকটি PDF বা ছবি যোগ করুন • সর্বোচ্চ ৪০ MB',
+    replaceFile: 'বদল করুন',
+    countingPagesText: 'পৃষ্ঠা গণনা করা হচ্ছে...',
+    uploadingDocText: 'ডকুমেন্ট আপলোড হচ্ছে...',
+
+    // PriceBar & Bottom checkout
+    estimateBadge: 'আনুমানিক',
+    shopPausedBadge: 'দোকান সাময়িক বন্ধ',
+    shopOffline: 'দোকান অফলাইন',
+    analyzing: 'যাচাই হচ্ছে…',
+    readingPagesBadge: 'পৃষ্ঠা যাচাই হচ্ছে…',
+    uploadFileBtn: 'ফাইল আপলোড করুন',
+    payBtn: 'পরিশোধ করুন',
+    sendingBtn: 'পাঠানো হচ্ছে…',
+    docsMerged: 'টি ফাইল',
+    pagesWord: 'পৃষ্ঠা',
+    pageWord: 'পৃষ্ঠা',
+    copiesWord: 'কপি',
+
+    // Batch queue
+    docsToPrint: 'আপনার প্রিন্ট করার ফাইলসমূহ',
+    combinedBill: '১টি সম্মিলিত বিল',
+    tapDocToAdjust: 'কপি সংখ্যা বা কালার পরিবর্তন করতে নথিতে ক্লিক করুন',
+    mergedTotal: 'সর্বমোট মূল্য',
+    addAnotherDocBtn: '+ আরেকটি ফাইল যোগ করুন (একসাথে পেমেন্ট)',
+
+    // Service selector cards
+    fromPrice: 'শুরু',
+    perPageSuffix: '/পৃষ্ঠা',
+    colorBadge: 'রঙিন',
+    duplexBadge: 'উভয় পিঠ',
   },
 
   hi: {
@@ -307,5 +457,55 @@ export const translations: Record<Language, TranslationDictionary> = {
     jobToken: 'ऑर्डर टोकन नंबर',
     statusQueued: 'स्थिति: प्रिंटिंग कतार में है',
     printAnother: 'एक और दस्तावेज़ प्रिंट करें',
+
+    // Detailed options & controls
+    totalMultiplier: 'कुल प्रतियों का गुणक',
+    colorPrintTitle: 'कलर प्रिंट (Color Print)',
+    duplexTitle: 'दोनों तरफ प्रिंट (Duplex)',
+    duplexDesc: 'कागज के दोनों तरफ प्रिंट होगा',
+
+    // Page selection options
+    pagesToPrint: 'प्रिंट करने के लिए पृष्ठ',
+    oddPages: 'विषम पृष्ठ (Odd Pages)',
+    evenPages: 'सम पृष्ठ (Even Pages)',
+    specificPages: 'विशिष्ट पृष्ठ',
+    pageRangeHelp: 'अल्पविराम से अलग किए गए विशिष्ट पृष्ठ या श्रेणी दर्ज करें (उदा. 1-3, 5, 8-10)',
+
+    // Dropzone options
+    tapToUploadDoc: 'दस्तावेज़ अपलोड करने के लिए टैप करें',
+    tapToUploadDocNum: 'दस्तावेज़ अपलोड करने के लिए टैप करें',
+    dropDocHere: 'अपना दस्तावेज़ यहाँ छोड़ें',
+    dragAndDropLimits: 'ड्रैग और ड्रॉप करें या क्लिक करें • PDF और फोटो (अधिकतम 40 MB)',
+    addAnotherLimit: 'अन्य PDF या फोटो जोड़ें • अधिकतम 40 MB',
+    replaceFile: 'बदलें',
+    countingPagesText: 'पृष्ठ गिने जा रहे हैं...',
+    uploadingDocText: 'दस्तावेज़ अपलोड हो रहा है...',
+
+    // PriceBar & Bottom checkout
+    estimateBadge: 'अनुमानित',
+    shopPausedBadge: 'दुकान रोकी गई है',
+    shopOffline: 'दुकान ऑफलाइन',
+    analyzing: 'जाँच जारी है…',
+    readingPagesBadge: 'पेज गिने जा रहे हैं…',
+    uploadFileBtn: 'फाइल अपलोड करें',
+    payBtn: 'भुगतान करें',
+    sendingBtn: 'भेजा जा रहा है…',
+    docsMerged: 'दस्तावेज़',
+    pagesWord: 'पृष्ठ',
+    pageWord: 'पृष्ठ',
+    copiesWord: 'प्रतियां',
+
+    // Batch queue
+    docsToPrint: 'आपके प्रिंट किए जाने वाले दस्तावेज़',
+    combinedBill: '1 संयुक्त बिल',
+    tapDocToAdjust: 'प्रतियों की संख्या या रंग बदलने के लिए दस्तावेज़ पर टैप करें',
+    mergedTotal: 'कुल योग',
+    addAnotherDocBtn: '+ एक और दस्तावेज़ जोड़ें (एक साथ भुगतान)',
+
+    // Service selector cards
+    fromPrice: 'प्रारंभिक',
+    perPageSuffix: '/पेज',
+    colorBadge: 'रंगीन',
+    duplexBadge: 'दोनों तरफ',
   },
 }

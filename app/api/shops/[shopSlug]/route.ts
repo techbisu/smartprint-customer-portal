@@ -61,6 +61,10 @@ export async function PATCH(
   if (body.pusher_key !== undefined) shop.pusher_key = String(body.pusher_key).trim()
   if (body.pusher_secret !== undefined) shop.pusher_secret = String(body.pusher_secret).trim()
   if (body.pusher_cluster !== undefined) shop.pusher_cluster = String(body.pusher_cluster).trim()
+  if (body.default_language !== undefined) {
+    const lang = String(body.default_language).toLowerCase().trim()
+    shop.default_language = ['en', 'bn', 'hi'].includes(lang) ? lang : 'en'
+  }
 
   if (body.regenerate_token) {
     shop.agent_auth_token = `token-${crypto.randomUUID().slice(0, 18)}`
@@ -77,6 +81,7 @@ export async function PATCH(
       cashfree_app_id: shop.cashfree_app_id,
       cashfree_secret_key: shop.cashfree_secret_key,
       cashfree_env: shop.cashfree_env,
+      default_language: shop.default_language,
       shop_name: shop.shop_name,
       upi_vpa: shop.upi_vpa,
       phone: shop.phone,
