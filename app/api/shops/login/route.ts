@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
 import { supabaseAdmin, mockShops } from '@/lib/supabaseAdmin'
 
 export async function POST(req: NextRequest) {
@@ -7,7 +8,7 @@ export async function POST(req: NextRequest) {
 
     if (!identifier || !pin) {
       return NextResponse.json(
-        { error: 'Please enter your shop username/slug/phone and access PIN' },
+        { error: 'Please enter your shop username/slug/phone and access password' },
         { status: 400 }
       )
     }
@@ -43,18 +44,28 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verify PIN or agent_auth_token (default fallback is '1234' if unset)
-    const validPin = (shop as any).pin || '1234'
-    const validToken = shop.agent_auth_token
+    // 3. Verify password via bcrypt hash or legacy pin/token fallback
+    let isMatch = false
+    if ((shop as any).password_hash) {
+      try {
+        isMatch = await bcrypt.compare(cleanPin, (shop as any).password_hash)
+      } catch {
+        isMatch = false
+      }
+    }
 
-    const isMatch =
-      cleanPin === validPin ||
-      cleanPin === validToken ||
-      cleanPin === '1234' // Universal fallback for demo/testing convenience
+    if (!isMatch) {
+      const validPin = (shop as any).pin || '1234'
+      const validToken = shop.agent_auth_token
+      isMatch =
+        cleanPin === validPin ||
+        cleanPin === validToken ||
+        (shop.slug === 'demo-shop' && cleanPin === '1234')
+    }
 
     if (!isMatch) {
       return NextResponse.json(
-        { error: 'Incorrect shop access PIN. Default PIN is 1234.' },
+        { error: 'Incorrect shop access password or PIN.' },
         { status: 401 }
       )
     }

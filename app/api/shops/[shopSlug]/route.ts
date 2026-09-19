@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
 import { supabaseAdmin, mockShops, mockRateCards, mockBanners } from '@/lib/supabaseAdmin'
 
 export async function GET(
@@ -50,7 +51,12 @@ export async function PATCH(
   if (body.upi_vpa) shop.upi_vpa = String(body.upi_vpa).trim()
   if (body.phone !== undefined) shop.phone = String(body.phone).trim()
   if (body.address !== undefined) shop.address = String(body.address).trim()
-  if (body.pin !== undefined) shop.pin = String(body.pin).trim()
+  if (body.password || body.pin) {
+    const rawPass = String(body.password || body.pin).trim()
+    shop.pin = rawPass
+    const salt = await bcrypt.genSalt(10)
+    shop.password_hash = await bcrypt.hash(rawPass, salt)
+  }
   if (body.pusher_app_id !== undefined) shop.pusher_app_id = String(body.pusher_app_id).trim()
   if (body.pusher_key !== undefined) shop.pusher_key = String(body.pusher_key).trim()
   if (body.pusher_secret !== undefined) shop.pusher_secret = String(body.pusher_secret).trim()
@@ -75,6 +81,8 @@ export async function PATCH(
       upi_vpa: shop.upi_vpa,
       phone: shop.phone,
       address: shop.address,
+      password_hash: shop.password_hash,
+      pin: shop.pin,
       pusher_app_id: shop.pusher_app_id,
       pusher_key: shop.pusher_key,
       pusher_secret: shop.pusher_secret,

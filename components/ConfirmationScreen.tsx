@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { formatRupees } from '@/lib/pricing'
 import { PaymentMethod } from '@/lib/types'
+import { Language, translations } from '@/lib/translations'
 import { CheckCircle2, FileText, Printer, ShieldCheck, ArrowRight, Store, Sparkles } from 'lucide-react'
 
 export interface ConfirmedDocumentItem {
@@ -21,6 +22,7 @@ interface Props {
   shopName: string
   shopUpiVpa: string
   itemsList?: ConfirmedDocumentItem[]
+  language?: Language
   onPrintAnother: () => void
 }
 
@@ -32,8 +34,10 @@ export default function ConfirmationScreen({
   shopName,
   shopUpiVpa,
   itemsList = [],
+  language = 'en',
   onPrintAnother,
 }: Props) {
+  const t = translations[language] || translations.en
   const hasMultiple = itemsList.length > 1 || jobIds.length > 1
   const count = itemsList.length > 0 ? itemsList.length : jobIds.length > 0 ? jobIds.length : 1
 

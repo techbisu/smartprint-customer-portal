@@ -14,6 +14,21 @@ create table if not exists shops (
     -- per shop during onboarding, e.g. `openssl rand -hex 32`, and paste it
     -- into that shop's agent Settings tab as "Auth Token".
     agent_auth_token varchar(128) unique not null,
+    password_hash varchar(255),
+    pin varchar(64) default '1234',
+    phone varchar(32),
+    address text,
+    pusher_app_id varchar(128),
+    pusher_key varchar(128),
+    pusher_secret varchar(128),
+    pusher_cluster varchar(32) default 'ap2',
+    enable_counter_pay boolean default true,
+    enable_upi_pay boolean default true,
+    enable_online_pay boolean default true,
+    payment_gateway_enabled boolean default true,
+    cashfree_app_id varchar(255),
+    cashfree_secret_key varchar(255),
+    cashfree_env varchar(32) default 'sandbox',
     created_at timestamp with time zone default now()
 );
 

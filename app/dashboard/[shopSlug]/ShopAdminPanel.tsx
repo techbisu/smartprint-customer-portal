@@ -458,11 +458,12 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
     }
   }
 
-  // Update Shop Settings (name, UPI, phone, address)
+  // Update Shop Settings (name, UPI, phone, address, password)
   const [editShopName, setEditShopName] = useState(shop.shop_name)
   const [editUpi, setEditUpi] = useState(shop.upi_vpa)
   const [editPhone, setEditPhone] = useState(shop.phone || '')
   const [editAddress, setEditAddress] = useState(shop.address || '')
+  const [editPassword, setEditPassword] = useState('')
 
   // Cashfree API Configuration
   const [cashfreeAppId, setCashfreeAppId] = useState(shop.cashfree_app_id || '')
@@ -501,20 +502,26 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
+      const payload: Record<string, string> = {
+        shop_name: editShopName,
+        upi_vpa: editUpi,
+        phone: editPhone,
+        address: editAddress,
+      }
+      if (editPassword.trim()) {
+        payload.password = editPassword.trim()
+      }
+
       const res = await fetch(`/api/shops/${shop.slug}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          shop_name: editShopName,
-          upi_vpa: editUpi,
-          phone: editPhone,
-          address: editAddress,
-        }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (data.shop) {
         setShop({ ...shop, ...data.shop })
-        showToast('Shop details saved successfully')
+        setEditPassword('')
+        showToast('Shop details and password saved successfully')
       }
     } catch {
       showToast('Failed to save settings')
@@ -1030,9 +1037,25 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-xs font-semibold text-ink mb-1">
+                    Update Access Password / PIN (Optional)
+                  </label>
+                  <input
+                    type="password"
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    placeholder="Enter new password to change (leave blank to keep current)"
+                    className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-xs text-ink focus:border-brand-600 focus:outline-none"
+                  />
+                  <p className="text-[11px] text-muted mt-1">
+                    Used for logging into this admin panel. Hashed securely with bcrypt.
+                  </p>
+                </div>
+
                 <button
                   type="submit"
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 transition-colors"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 transition-colors cursor-pointer"
                 >
                   <Save className="h-3.5 w-3.5" />
                   Save Shop Details

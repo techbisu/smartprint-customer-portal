@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
+    "bcryptjs": "^3.0.3",
     "html-to-image": "^1.11.13",
     "js-md5": "^0.8.3",
     "jspdf": "^4.2.1",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.20.6",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.14.9",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.3",

@@ -2,13 +2,35 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, mockShops, mockRateCards } from '@/lib/supabaseAdmin'
 import { RateCardItem } from '@/lib/types'
 
+async function getTargetShop(shopSlug: string) {
+  const cleanSlug = shopSlug.toLowerCase().trim()
+  const { data: dbShop } = await supabaseAdmin
+    .from('shops')
+    .select('id, slug, shop_name')
+    .eq('slug', cleanSlug)
+    .maybeSingle()
+
+  if (dbShop) return dbShop
+  return mockShops.find((s) => s.slug.toLowerCase() === cleanSlug) || null
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
   const { shopSlug } = await params
-  const shop = mockShops.find((s) => s.slug === shopSlug)
+  const shop = await getTargetShop(shopSlug)
   if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
+
+  const { data: dbItems } = await supabaseAdmin
+    .from('shop_rate_card')
+    .select('*')
+    .eq('shop_id', shop.id)
+    .order('category', { ascending: true })
+
+  if (dbItems && dbItems.length > 0) {
+    return NextResponse.json({ items: dbItems })
+  }
 
   const items = mockRateCards.filter((item) => item.shop_id === shop.id)
   return NextResponse.json({ items })
@@ -19,7 +41,7 @@ export async function POST(
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
   const { shopSlug } = await params
-  const shop = mockShops.find((s) => s.slug === shopSlug)
+  const shop = await getTargetShop(shopSlug)
   if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
 
   const body = await req.json()
@@ -54,6 +76,7 @@ export async function POST(
   }
 
   await supabaseAdmin.from('shop_rate_card').insert(newItem)
+  mockRateCards.push(newItem)
   return NextResponse.json({ success: true, item: newItem })
 }
 
@@ -62,7 +85,7 @@ export async function PUT(
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
   const { shopSlug } = await params
-  const shop = mockShops.find((s) => s.slug === shopSlug)
+  const shop = await getTargetShop(shopSlug)
   if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
 
   const body = await req.json()
@@ -72,23 +95,31 @@ export async function PUT(
     return NextResponse.json({ error: 'Rate card ID is required' }, { status: 400 })
   }
 
-  const itemIndex = mockRateCards.findIndex((i) => i.id === id && i.shop_id === shop.id)
-  if (itemIndex === -1) {
-    return NextResponse.json({ error: 'Item not found' }, { status: 404 })
-  }
-
-  const target = mockRateCards[itemIndex]
-  if (display_name !== undefined) target.display_name = String(display_name).trim()
-  if (category !== undefined) target.category = String(category).trim()
-  if (price_bw !== undefined) target.price_bw = Number(price_bw)
+  const updatePayload: Partial<RateCardItem> = {}
+  if (display_name !== undefined) updatePayload.display_name = String(display_name).trim()
+  if (category !== undefined) updatePayload.category = String(category).trim()
+  if (price_bw !== undefined) updatePayload.price_bw = Number(price_bw)
   if (price_color !== undefined) {
-    target.price_color = price_color === null || price_color === '' ? null : Number(price_color)
+    updatePayload.price_color = price_color === null || price_color === '' ? null : Number(price_color)
   }
-  if (supports_duplex !== undefined) target.supports_duplex = Boolean(supports_duplex)
-  if (is_active !== undefined) target.is_active = Boolean(is_active)
+  if (supports_duplex !== undefined) updatePayload.supports_duplex = Boolean(supports_duplex)
+  if (is_active !== undefined) updatePayload.is_active = Boolean(is_active)
 
-  await supabaseAdmin.from('shop_rate_card').update(target).eq('id', id).eq('shop_id', shop.id)
-  return NextResponse.json({ success: true, item: target })
+  const { data } = await supabaseAdmin
+    .from('shop_rate_card')
+    .update(updatePayload)
+    .eq('id', id)
+    .eq('shop_id', shop.id)
+    .select()
+    .maybeSingle()
+
+  const idx = mockRateCards.findIndex((i) => i.id === id)
+  if (idx !== -1) {
+    mockRateCards[idx] = { ...mockRateCards[idx], ...updatePayload }
+  }
+
+  const returnItem = data || (idx !== -1 ? mockRateCards[idx] : { id, shop_id: shop.id, ...updatePayload })
+  return NextResponse.json({ success: true, item: returnItem })
 }
 
 export async function DELETE(
@@ -96,18 +127,19 @@ export async function DELETE(
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
   const { shopSlug } = await params
-  const shop = mockShops.find((s) => s.slug === shopSlug)
+  const shop = await getTargetShop(shopSlug)
   if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'Item ID is required' }, { status: 400 })
 
+  await supabaseAdmin.from('shop_rate_card').delete().eq('id', id).eq('shop_id', shop.id)
+
   const idx = mockRateCards.findIndex((i) => i.id === id && i.shop_id === shop.id)
   if (idx !== -1) {
     mockRateCards.splice(idx, 1)
   }
 
-  await supabaseAdmin.from('shop_rate_card').delete().eq('id', id).eq('shop_id', shop.id)
   return NextResponse.json({ success: true })
 }

@@ -22,6 +22,7 @@ import PaymentMethodModal from '@/components/PaymentMethodModal'
 import DocumentBatchList, { DocumentItem } from '@/components/DocumentBatchList'
 import { ConfirmedDocumentItem } from '@/components/ConfirmationScreen'
 import { pageSelectionLabel, PageSelectionMode, selectedPageCount } from '@/lib/pageSelection'
+import { Language, translations } from '@/lib/translations'
 import {
   ArrowLeft,
   FileText,
@@ -93,6 +94,22 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
   }, [availableItems])
 
   const [stage, setStage] = useState<Stage>('configure')
+  const [lang, setLang] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('smartprint_lang') as Language
+      if (saved && (saved === 'en' || saved === 'bn' || saved === 'hi')) return saved
+    }
+    return 'en'
+  })
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('smartprint_lang', newLang)
+    }
+  }
+
+  const t = translations[lang] || translations.en
   const [selectedItem, setSelectedItem] = useState<RateCardItem | null>(initialDefaultItem || null)
   const [showAllServicesModal, setShowAllServicesModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -830,6 +847,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
         shopName={shop.shop_name}
         shopUpiVpa={shop.upi_vpa}
         itemsList={confirmedJob.itemsList}
+        language={lang}
         onPrintAnother={resetFlow}
       />
     )
@@ -838,20 +856,28 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
   return (
     <main className="mx-auto min-h-screen max-w-md pb-36 bg-paper">
       {/* Redesigned Shop Header - Admin Link hidden on public customer front */}
-      <ShopHeader shop={shop} showAdminLink={false} />
+      <ShopHeader
+        shop={shop}
+        showAdminLink={false}
+        language={lang}
+        onLanguageChange={handleLanguageChange}
+      />
 
       <div className="animate-rise space-y-4 px-4 py-4">
         {/* Banner Slider Section */}
         <BannerSlider banners={banners} />
 
         {/* Value Proposition & 4-Step Highlight Banner */}
-        <HowItWorksBanner />
+        <HowItWorksBanner language={lang} />
 
         {/* Offline Warning Notice if shop paused */}
         {!shop.is_online && (
           <div className="flex items-center gap-2 rounded-xl bg-danger-50 p-3.5 text-xs text-danger-600 border border-danger-200">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
-            <span>This shop is currently not accepting new print jobs. Please check back shortly.</span>
+            <div>
+              <p className="font-bold">{t.shopOfflineTitle}</p>
+              <p className="text-[11px] opacity-90 mt-0.5">{t.shopOfflineMessage}</p>
+            </div>
           </div>
         )}
 
@@ -862,7 +888,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted">
-                  Choose Print Service
+                  {t.choosePrintService}
                 </span>
                 {availableItems.length > 2 && (
                   <button
@@ -870,7 +896,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
                     onClick={() => setShowAllServicesModal(true)}
                     className="text-[11px] font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-0.5 cursor-pointer"
                   >
-                    <span>All Services &amp; Rates</span>
+                    <span>{t.allServicesAndRates}</span>
                     <ChevronRight className="h-3 w-3" />
                   </button>
                 )}
@@ -1257,6 +1283,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
           onClose={() => setShowPaymentModal(false)}
           total={grandTotal}
           billedUnits={grandBilledUnits}
+          language={lang}
           unitLabel={
             documents.length > 1
               ? 'pages'

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { formatRupees } from '@/lib/pricing'
 import { PaymentMethod } from '@/lib/types'
+import { Language, translations } from '@/lib/translations'
 
 interface Props {
   isOpen: boolean
@@ -31,6 +32,7 @@ interface Props {
   submittingMethod?: PaymentMethod
   itemsCount?: number
   itemsBreakdown?: Array<{ id: string; name: string; details: string; amount: number }>
+  language?: Language
   onSelectMethod: (method: PaymentMethod) => void
 }
 
@@ -50,10 +52,12 @@ export default function PaymentMethodModal({
   submittingMethod,
   itemsCount = 1,
   itemsBreakdown,
+  language = 'en',
   onSelectMethod,
 }: Props) {
   if (!isOpen) return null
 
+  const t = translations[language] || translations.en
   const availableMethodsCount = [enableCounter, enableUpi, enableOnline].filter(Boolean).length
 
   return (

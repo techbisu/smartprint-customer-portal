@@ -2,9 +2,15 @@
 
 import { QrCode, UploadCloud, CreditCard, Printer, CheckCircle2, ChevronRight, Smartphone } from 'lucide-react'
 import { useState } from 'react'
+import { Language, translations } from '@/lib/translations'
 
-export default function HowItWorksBanner() {
+interface Props {
+  language?: Language
+}
+
+export default function HowItWorksBanner({ language = 'en' }: Props) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const t = translations[language] || translations.en
 
   const steps = [
     {
@@ -44,10 +50,22 @@ export default function HowItWorksBanner() {
         <div className="space-y-0.5">
           <div className="flex items-center gap-1.5 text-xs font-bold text-brand-600 uppercase tracking-wider">
             <Smartphone className="h-3.5 w-3.5" />
-            <span>Print Straight From Your Phone &middot; Instantly</span>
+            <span>
+              {language === 'bn'
+                ? 'মোবাইল থেকে সরাসরি প্রিন্ট করুন · নিমেষেই'
+                : language === 'hi'
+                ? 'सीधे अपने फोन से प्रिंट करें · तुरंत'
+                : 'Print Straight From Your Phone · Instantly'}
+            </span>
           </div>
           <p className="text-[12px] font-semibold text-ink">
-            No WhatsApp <span className="text-marigold-600 font-bold">&bull;</span> No Pendrive <span className="text-marigold-600 font-bold">&bull;</span> No File Transfer
+            {language === 'bn' ? (
+              <>হোয়াটসঅ্যাপ ছাড়াই <span className="text-marigold-600 font-bold">&bull;</span> পেনড্রাইভ ছাড়াই <span className="text-marigold-600 font-bold">&bull;</span> সরাসরি প্রিন্ট</>
+            ) : language === 'hi' ? (
+              <>व्हाट्सएप के बिना <span className="text-marigold-600 font-bold">&bull;</span> पेनड्राइव के बिना <span className="text-marigold-600 font-bold">&bull;</span> सीधा प्रिंट</>
+            ) : (
+              <>No WhatsApp <span className="text-marigold-600 font-bold">&bull;</span> No Pendrive <span className="text-marigold-600 font-bold">&bull;</span> No File Transfer</>
+            )}
           </p>
         </div>
 

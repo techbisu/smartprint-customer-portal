@@ -34,6 +34,8 @@ export default function IDCardStudio({ onLayoutReady, onCancel }: Props) {
   const [cardScale, setCardScale] = useState(1.0) // 1.0 = standard CR80 85.6mm x 54mm
   const [gapSize, setGapSize] = useState(10) // mm gap between front and back
   const [contrastBoost, setContrastBoost] = useState(true)
+  const [showSheetHeader, setShowSheetHeader] = useState(false)
+  const [sheetTitle, setSheetTitle] = useState('Smart ID Card Sheet')
   const [generating, setGenerating] = useState(false)
   const [outputReady, setOutputReady] = useState(false)
 
@@ -347,15 +349,21 @@ export default function IDCardStudio({ onLayoutReady, onCancel }: Props) {
         drawCard(backImgEl, startX + cardW + gapPx, 720, backRotation, 'SET 2 - BACK')
       }
 
-      // 4. Header Watermark on A4
-      ctx.fillStyle = '#475569'
-      ctx.font = 'bold 24px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('SMARTPRINT ID CARD SHEET (CR80 PHYSICAL PRINT SCALE: 85.6mm × 54.0mm)', A4_W / 2, 90)
+      // 4. Optional Header Watermark on A4
+      if (showSheetHeader) {
+        ctx.fillStyle = '#475569'
+        ctx.font = 'bold 24px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText(
+          sheetTitle ? sheetTitle.toUpperCase() : 'SMARTPRINT ID CARD SHEET (CR80 PHYSICAL PRINT SCALE: 85.6mm × 54.0mm)',
+          A4_W / 2,
+          90
+        )
 
-      ctx.font = '18px sans-serif'
-      ctx.fillStyle = '#94A3B8'
-      ctx.fillText('Auto-Aligned & Calibrated for Standard PVC Card Lamination Pouches', A4_W / 2, 125)
+        ctx.font = '18px sans-serif'
+        ctx.fillStyle = '#94A3B8'
+        ctx.fillText('Auto-Aligned & Calibrated for Standard PVC Card Lamination Pouches', A4_W / 2, 125)
+      }
 
       setOutputReady(Boolean(frontImage && backImage))
     }
@@ -365,7 +373,7 @@ export default function IDCardStudio({ onLayoutReady, onCancel }: Props) {
     return () => {
       isMounted = false
     }
-  }, [frontImage, backImage, layoutMode, frontRotation, backRotation, cardScale, gapSize, contrastBoost])
+  }, [frontImage, backImage, layoutMode, frontRotation, backRotation, cardScale, gapSize, contrastBoost, showSheetHeader, sheetTitle])
 
   // Export composite to File
   const handleExportPrint = () => {
@@ -572,6 +580,32 @@ export default function IDCardStudio({ onLayoutReady, onCancel }: Props) {
             className="h-4 w-4 rounded text-brand-600 focus:ring-brand-500"
           />
         </div>
+      </div>
+
+      {/* Header Watermark Control */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-xl border border-line bg-paper p-3">
+        <div className="flex items-center gap-2">
+          <input
+            id="sheet-header-toggle"
+            type="checkbox"
+            checked={showSheetHeader}
+            onChange={(e) => setShowSheetHeader(e.target.checked)}
+            className="h-4 w-4 rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+          />
+          <label htmlFor="sheet-header-toggle" className="cursor-pointer">
+            <span className="text-xs font-semibold text-ink block">Show Header Title on A4 Sheet</span>
+            <span className="text-[10px] text-muted">Leave unchecked for clean photo paper without text watermark</span>
+          </label>
+        </div>
+        {showSheetHeader && (
+          <input
+            type="text"
+            value={sheetTitle}
+            onChange={(e) => setSheetTitle(e.target.value)}
+            placeholder="e.g. Smart ID Card Sheet"
+            className="rounded-lg border border-line bg-white px-2.5 py-1 text-xs text-ink focus:border-brand-500 focus:outline-none max-w-xs"
+          />
+        )}
       </div>
 
       {/* Real-time A4 Sheet Preview Canvas */}

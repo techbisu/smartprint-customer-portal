@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
 import { supabaseAdmin, mockShops, mockRateCards, mockBanners } from '@/lib/supabaseAdmin'
 
 export async function POST(req: NextRequest) {
@@ -10,6 +11,7 @@ export async function POST(req: NextRequest) {
       upiVpa,
       phone,
       address,
+      password,
       initialPricing,
       pusherAppId,
       pusherKey,
@@ -42,6 +44,11 @@ export async function POST(req: NextRequest) {
     const shopId = crypto.randomUUID()
     const agentToken = `token-${crypto.randomUUID().slice(0, 18)}`
 
+    // Hash password with bcrypt
+    const rawPassword = password ? String(password).trim() : '1234'
+    const salt = await bcrypt.genSalt(10)
+    const passwordHash = await bcrypt.hash(rawPassword, salt)
+
     const newShop = {
       id: shopId,
       slug: cleanSlug,
@@ -51,6 +58,8 @@ export async function POST(req: NextRequest) {
       address: address?.trim() || '',
       is_online: true,
       agent_auth_token: agentToken,
+      password_hash: passwordHash,
+      pin: rawPassword,
       pusher_app_id: pusherAppId?.trim() || process.env.PUSHER_APP_ID || '',
       pusher_key: pusherKey?.trim() || process.env.PUSHER_KEY || '2e5517c16c8d36b2969d',
       pusher_secret: pusherSecret?.trim() || process.env.PUSHER_SECRET || '',
@@ -58,6 +67,7 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     }
 
+    mockShops.push(newShop as any)
     await supabaseAdmin.from('shops').insert(newShop)
 
     // Create default rate cards for the shop

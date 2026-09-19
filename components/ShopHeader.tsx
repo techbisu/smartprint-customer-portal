@@ -1,6 +1,7 @@
 'use client'
 
 import { Shop } from '@/lib/types'
+import { Language, translations } from '@/lib/translations'
 import {
   ShieldCheck,
   Store,
@@ -12,6 +13,7 @@ import {
   Check,
   CheckCircle2,
   Loader2,
+  Languages,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
@@ -20,9 +22,16 @@ import QRCode from 'qrcode'
 interface Props {
   shop: Shop
   showAdminLink?: boolean
+  language?: Language
+  onLanguageChange?: (lang: Language) => void
 }
 
-export default function ShopHeader({ shop, showAdminLink = true }: Props) {
+export default function ShopHeader({
+  shop,
+  showAdminLink = true,
+  language = 'en',
+  onLanguageChange,
+}: Props) {
   const [showInfoModal, setShowInfoModal] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -93,12 +102,12 @@ export default function ShopHeader({ shop, showAdminLink = true }: Props) {
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success-500 opacity-75"></span>
                         <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success-500"></span>
                       </span>
-                      Live Counter
+                      {translations[language]?.shopCounterOpen || 'Live Counter'}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 font-medium text-danger-500 bg-danger-50 px-1.5 py-0.5 rounded-md">
                       <span className="h-1.5 w-1.5 rounded-full bg-danger-500" />
-                      Paused
+                      {translations[language]?.shopCounterClosed || 'Paused'}
                     </span>
                   )}
                   <span className="text-muted/60">&middot;</span>
@@ -109,8 +118,49 @@ export default function ShopHeader({ shop, showAdminLink = true }: Props) {
               </div>
             </div>
 
-            {/* Right: Quick action for Shop Info & QR */}
+            {/* Right: Language Switcher & QR Modal */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
+              {onLanguageChange && (
+                <div className="flex items-center rounded-lg border border-line bg-paper p-0.5 text-[11px] font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange('en')}
+                    className={`px-1.5 py-0.5 rounded transition-all ${
+                      language === 'en'
+                        ? 'bg-white shadow-2xs text-brand-700 font-bold'
+                        : 'text-muted hover:text-ink'
+                    }`}
+                    title="English"
+                  >
+                    EN
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange('bn')}
+                    className={`px-1.5 py-0.5 rounded transition-all ${
+                      language === 'bn'
+                        ? 'bg-white shadow-2xs text-brand-700 font-bold'
+                        : 'text-muted hover:text-ink'
+                    }`}
+                    title="বাংলা (Bengali)"
+                  >
+                    বাংলা
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onLanguageChange('hi')}
+                    className={`px-1.5 py-0.5 rounded transition-all ${
+                      language === 'hi'
+                        ? 'bg-white shadow-2xs text-brand-700 font-bold'
+                        : 'text-muted hover:text-ink'
+                    }`}
+                    title="हिंदी (Hindi)"
+                  >
+                    हिंदी
+                  </button>
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={() => setShowInfoModal(true)}

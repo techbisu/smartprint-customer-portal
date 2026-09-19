@@ -34,6 +34,8 @@ export default function ShopRegistrationPage() {
   const [upiVpa, setUpiVpa] = useState('')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   // Default pricing
   const [bwRate, setBwRate] = useState('2.00')
@@ -90,6 +92,10 @@ export default function ShopRegistrationPage() {
       setError('Please enter a valid UPI VPA ID (e.g. shopname@upi or 9876543210@paytm).')
       return
     }
+    if (!password.trim() || password.trim().length < 4) {
+      setError('Please set an admin password or PIN of at least 4 characters for logging into your shop dashboard.')
+      return
+    }
 
     setLoading(true)
 
@@ -126,6 +132,7 @@ export default function ShopRegistrationPage() {
           upiVpa,
           phone,
           address,
+          password: password.trim(),
           initialPricing,
           pusherAppId,
           pusherKey: pusherAppKey,
@@ -571,6 +578,33 @@ export default function ShopRegistrationPage() {
                   <MapPin className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted pointer-events-none" />
                 </div>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-ink mb-1">
+                Admin Dashboard Password / PIN *
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create access password (min. 4 characters)"
+                  className="w-full rounded-xl border border-line bg-white pl-9 pr-10 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
+                />
+                <Key className="absolute left-3 top-3 h-4 w-4 text-muted pointer-events-none" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-muted hover:text-ink p-0.5"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="mt-1 text-[11px] text-muted">
+                You will use this password along with your slug/phone to log into your Shop Dashboard.
+              </p>
             </div>
           </div>
 

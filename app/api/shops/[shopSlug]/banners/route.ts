@@ -2,13 +2,35 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, mockShops, mockBanners } from '@/lib/supabaseAdmin'
 import { ShopBanner } from '@/lib/types'
 
+async function getTargetShop(shopSlug: string) {
+  const cleanSlug = shopSlug.toLowerCase().trim()
+  const { data: dbShop } = await supabaseAdmin
+    .from('shops')
+    .select('id, slug, shop_name')
+    .eq('slug', cleanSlug)
+    .maybeSingle()
+
+  if (dbShop) return dbShop
+  return mockShops.find((s) => s.slug.toLowerCase() === cleanSlug) || null
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
   const { shopSlug } = await params
-  const shop = mockShops.find((s) => s.slug === shopSlug)
+  const shop = await getTargetShop(shopSlug)
   if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
+
+  const { data: dbBanners } = await supabaseAdmin
+    .from('shop_banners')
+    .select('*')
+    .eq('shop_id', shop.id)
+    .order('sort_order', { ascending: true })
+
+  if (dbBanners && dbBanners.length > 0) {
+    return NextResponse.json({ banners: dbBanners })
+  }
 
   const banners = mockBanners
     .filter((b) => b.shop_id === shop.id)
@@ -22,7 +44,7 @@ export async function POST(
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
   const { shopSlug } = await params
-  const shop = mockShops.find((s) => s.slug === shopSlug)
+  const shop = await getTargetShop(shopSlug)
   if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
 
   const body = await req.json()
@@ -31,8 +53,6 @@ export async function POST(
   if (!title) {
     return NextResponse.json({ error: 'Banner title is required' }, { status: 400 })
   }
-
-  const existing = mockBanners.filter((b) => b.shop_id === shop.id)
 
   const newBanner: ShopBanner = {
     id: `banner-${crypto.randomUUID().slice(0, 8)}`,
@@ -45,10 +65,11 @@ export async function POST(
     image_url: image_url || undefined,
     link_url: link_url || undefined,
     is_active: is_active !== undefined ? Boolean(is_active) : true,
-    sort_order: existing.length + 1,
+    sort_order: 1,
   }
 
   await supabaseAdmin.from('shop_banners').insert(newBanner)
+  mockBanners.push(newBanner)
   return NextResponse.json({ success: true, banner: newBanner })
 }
 
@@ -57,31 +78,42 @@ export async function PUT(
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
   const { shopSlug } = await params
-  const shop = mockShops.find((s) => s.slug === shopSlug)
+  const shop = await getTargetShop(shopSlug)
   if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
 
   const body = await req.json()
-  const { id, title, subtitle, badge, badge_color, bg_gradient, is_active, sort_order } = body
+  const { id, title, subtitle, badge, badge_color, bg_gradient, image_url, link_url, is_active, sort_order } = body
 
   if (!id) {
     return NextResponse.json({ error: 'Banner ID is required' }, { status: 400 })
   }
 
-  const banner = mockBanners.find((b) => b.id === id && b.shop_id === shop.id)
-  if (!banner) {
-    return NextResponse.json({ error: 'Banner not found' }, { status: 404 })
+  const updatePayload: Partial<ShopBanner> = {}
+  if (title !== undefined) updatePayload.title = String(title).trim()
+  if (subtitle !== undefined) updatePayload.subtitle = String(subtitle).trim()
+  if (badge !== undefined) updatePayload.badge = String(badge).trim() || undefined
+  if (badge_color !== undefined) updatePayload.badge_color = badge_color
+  if (bg_gradient !== undefined) updatePayload.bg_gradient = bg_gradient
+  if (image_url !== undefined) updatePayload.image_url = image_url
+  if (link_url !== undefined) updatePayload.link_url = link_url
+  if (is_active !== undefined) updatePayload.is_active = Boolean(is_active)
+  if (sort_order !== undefined) updatePayload.sort_order = Number(sort_order)
+
+  const { data } = await supabaseAdmin
+    .from('shop_banners')
+    .update(updatePayload)
+    .eq('id', id)
+    .eq('shop_id', shop.id)
+    .select()
+    .maybeSingle()
+
+  const idx = mockBanners.findIndex((b) => b.id === id)
+  if (idx !== -1) {
+    mockBanners[idx] = { ...mockBanners[idx], ...updatePayload }
   }
 
-  if (title !== undefined) banner.title = String(title).trim()
-  if (subtitle !== undefined) banner.subtitle = String(subtitle).trim()
-  if (badge !== undefined) banner.badge = String(badge).trim() || undefined
-  if (badge_color !== undefined) banner.badge_color = badge_color
-  if (bg_gradient !== undefined) banner.bg_gradient = bg_gradient
-  if (is_active !== undefined) banner.is_active = Boolean(is_active)
-  if (sort_order !== undefined) banner.sort_order = Number(sort_order)
-
-  await supabaseAdmin.from('shop_banners').update(banner).eq('id', id).eq('shop_id', shop.id)
-  return NextResponse.json({ success: true, banner })
+  const returnBanner = data || (idx !== -1 ? mockBanners[idx] : { id, shop_id: shop.id, ...updatePayload })
+  return NextResponse.json({ success: true, banner: returnBanner })
 }
 
 export async function DELETE(
@@ -89,18 +121,19 @@ export async function DELETE(
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
   const { shopSlug } = await params
-  const shop = mockShops.find((s) => s.slug === shopSlug)
+  const shop = await getTargetShop(shopSlug)
   if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'Banner ID is required' }, { status: 400 })
 
+  await supabaseAdmin.from('shop_banners').delete().eq('id', id).eq('shop_id', shop.id)
+
   const idx = mockBanners.findIndex((b) => b.id === id && b.shop_id === shop.id)
   if (idx !== -1) {
     mockBanners.splice(idx, 1)
   }
 
-  await supabaseAdmin.from('shop_banners').delete().eq('id', id).eq('shop_id', shop.id)
   return NextResponse.json({ success: true })
 }
