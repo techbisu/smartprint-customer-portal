@@ -30,14 +30,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx @opennextjs/cloudflare build
-      - name: Configure Worker secrets
-        run: |
-          printf '%s' "$NEXT_PUBLIC_SUPABASE_URL" | npx wrangler secret put NEXT_PUBLIC_SUPABASE_URL
-          printf '%s' "$NEXT_PUBLIC_SUPABASE_ANON_KEY" | npx wrangler secret put NEXT_PUBLIC_SUPABASE_ANON_KEY
-          printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
-          printf '%s' "$PUSHER_APP_ID" | npx wrangler secret put PUSHER_APP_ID
-          printf '%s' "$PUSHER_KEY" | npx wrangler secret put PUSHER_KEY
-          printf '%s' "$PUSHER_SECRET" | npx wrangler secret put PUSHER_SECRET
-          printf '%s' "$PUSHER_CLUSTER" | npx wrangler secret put PUSHER_CLUSTER
       - name: Deploy Worker
         run: npx wrangler deploy

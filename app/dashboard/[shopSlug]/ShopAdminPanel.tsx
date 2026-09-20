@@ -101,6 +101,12 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
   const [bannerGradient, setBannerGradient] = useState('from-[#2C3A6B] via-[#212C52] to-[#16181D]')
   const [bannerImageUrl, setBannerImageUrl] = useState('')
   const [isUploadingBannerImg, setIsUploadingBannerImg] = useState(false)
+  const [imgbbApiKey, setImgbbApiKey] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('smartprint_imgbb_api_key') || ''
+    }
+    return ''
+  })
   const bannerImageInputRef = useRef<HTMLInputElement>(null)
 
   const sanitizeImageUrl = (url: string) => {
@@ -114,27 +120,26 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
     if (!file) return
     setIsUploadingBannerImg(true)
     try {
-      const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-      const path = `banners/${shop.id}/${Date.now()}-${cleanName}`
-      const { error: uploadError } = await supabaseBrowser.storage
-        .from(UPLOAD_BUCKET)
-        .upload(path, file, { cacheControl: '3600', upsert: true })
-
-      if (uploadError) {
-        showToast('Image upload failed. You can paste an imgbb.com direct URL below.')
-        return
+      const formData = new FormData()
+      formData.append('file', file)
+      if (imgbbApiKey.trim()) {
+        formData.append('apiKey', imgbbApiKey.trim())
       }
 
-      const { data: publicUrlData } = supabaseBrowser.storage
-        .from(UPLOAD_BUCKET)
-        .getPublicUrl(path)
+      const res = await fetch('/api/imgbb/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
 
-      if (publicUrlData?.publicUrl) {
-        setBannerImageUrl(publicUrlData.publicUrl)
-        showToast('Banner image uploaded successfully!')
+      if (res.ok && data.success && data.url) {
+        setBannerImageUrl(data.url)
+        showToast('Image uploaded directly to ImgBB successfully!')
+      } else {
+        showToast(data.error || 'Failed to upload image to ImgBB')
       }
     } catch {
-      showToast('Error uploading banner image')
+      showToast('Error uploading image to ImgBB')
     } finally {
       setIsUploadingBannerImg(false)
     }
@@ -2090,9 +2095,47 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
                   </button>
                 </div>
 
-                {/* Direct ImgBB Quick Helper Link */}
+                {/* Direct ImgBB Upload & API Key Setup */}
+                <div className="rounded-lg bg-white p-2.5 border border-line space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-ink flex items-center gap-1">
+                      <Key className="h-3 w-3 text-brand-600" />
+                      ImgBB Upload API Key
+                    </span>
+                    <a
+                      href="https://api.imgbb.com/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-brand-600 hover:underline font-semibold flex items-center gap-0.5"
+                    >
+                      Get Free Key at api.imgbb.com
+                      <ExternalLink className="h-2.5 w-2.5" />
+                    </a>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="password"
+                      value={imgbbApiKey}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setImgbbApiKey(val)
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('smartprint_imgbb_api_key', val)
+                        }
+                      }}
+                      placeholder="Paste your ImgBB API Key here (auto-saved)..."
+                      className="flex-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink focus:border-brand-600 focus:outline-none"
+                    />
+                    {imgbbApiKey && (
+                      <span className="rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700 border border-emerald-200 flex items-center">
+                        Saved
+                      </span>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between text-[10px] text-muted pt-0.5">
-                  <span>Supported: ImgBB, Supabase Storage, or direct image link (.jpg, .png, .webp)</span>
+                  <span>Supported: Upload directly to ImgBB, or paste any i.ibb.co direct image link</span>
                   <a
                     href="https://imgbb.com/"
                     target="_blank"
