@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   X,
   RefreshCw,
@@ -18,6 +18,7 @@ import {
   HelpCircle,
   Play,
   Flame,
+  Globe,
 } from 'lucide-react'
 import { Shop } from '@/lib/types'
 
@@ -48,12 +49,36 @@ export default function AgentTroubleshootModal({
   const [showToken, setShowToken] = useState(false)
   const [simulating, setSimulating] = useState(false)
 
+  // Listen for Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
     setCopiedField(field)
     setTimeout(() => setCopiedField(null), 2000)
+  }
+
+  const copyAllConfig = () => {
+    const authUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/pusher/auth`
+    const text = [
+      `# SmartPrint Desktop Agent Configuration`,
+      `PORTAL_URL=${typeof window !== 'undefined' ? window.location.origin : ''}`,
+      `AUTH_ENDPOINT=${authUrl}`,
+      `SHOP_ID=${shop.id}`,
+      `AGENT_AUTH_TOKEN=${shop.agent_auth_token || 'demo-agent-auth-token-12345'}`,
+      `PUSHER_KEY=${shop.pusher_key || process.env.NEXT_PUBLIC_PUSHER_KEY || '2e5517c16c8d36b2969d'}`,
+      `PUSHER_CLUSTER=${shop.pusher_cluster || process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2'}`,
+    ].join('\n')
+    copyToClipboard(text, 'all_config')
   }
 
   const formatLastSeen = (timestamp: number | null) => {
@@ -76,13 +101,20 @@ export default function AgentTroubleshootModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-xs animate-fade-in">
-      <div
-        className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-line overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-surface/50">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-ink/60 backdrop-blur-xs p-3 sm:p-5 md:p-6 animate-fade-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="agent-troubleshoot-title"
+    >
+      <div className="flex min-h-full items-center justify-center">
+        <div
+          className="relative w-full max-w-2xl my-auto max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3rem)] flex flex-col rounded-2xl bg-white shadow-2xl border border-line overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header (Sticky, cannot shrink) */}
+          <div className="flex-shrink-0 flex items-center justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b border-line bg-surface/80">
           <div className="flex items-center gap-3">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl ${
@@ -125,13 +157,13 @@ export default function AgentTroubleshootModal({
         </div>
 
         {/* Content Body - Scrollable */}
-        <div className="overflow-y-auto p-6 space-y-6 flex-1 text-ink text-sm">
+        <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-6 space-y-5 text-ink text-sm overscroll-contain">
           {/* Status Diagnostic Card */}
           <div
             className={`rounded-xl p-4 border ${
               isOnline
-                ? 'bg-emerald-50/50 border-emerald-200 text-emerald-950'
-                : 'bg-amber-50/60 border-amber-200 text-amber-950'
+                ? 'bg-emerald-50/60 border-emerald-200 text-emerald-950'
+                : 'bg-amber-50/70 border-amber-200 text-amber-950'
             }`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -160,7 +192,7 @@ export default function AgentTroubleshootModal({
                   type="button"
                   onClick={onReconnect}
                   disabled={reconnecting}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-ink border border-line shadow-2xs hover:bg-paper active:scale-95 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-ink border border-line shadow-2xs hover:bg-paper active:scale-95 transition-all cursor-pointer disabled:opacity-60"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 text-brand-600 ${reconnecting ? 'animate-spin' : ''}`} />
                   <span>{reconnecting ? 'Pinging Agent...' : 'Reconnect Now'}</span>
@@ -170,7 +202,7 @@ export default function AgentTroubleshootModal({
           </div>
 
           {/* Step-by-Step Troubleshooting Checklist */}
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
               <HelpCircle className="h-4 w-4 text-brand-600" />
               Follow These Steps to Fix Offline Status
@@ -203,10 +235,10 @@ export default function AgentTroubleshootModal({
                   2
                 </div>
                 <div className="space-y-2 flex-1">
-                  <h4 className="font-bold text-ink text-sm">Verify Shop ID & Access Token</h4>
+                  <h4 className="font-bold text-ink text-sm">Verify Shop ID, Token & Auth Endpoint</h4>
                   <p className="text-xs text-muted leading-relaxed">
-                    Open the Desktop Agent Settings window and verify that the <strong>Shop ID</strong> and{' '}
-                    <strong>Access Token</strong> match the credentials below.
+                    Open the Desktop Agent Settings window and verify that the <strong>Shop ID</strong>,{' '}
+                    <strong>Access Token</strong>, and <strong>Auth Endpoint URL</strong> match below:
                   </p>
 
                   <div className="space-y-2 pt-1">
@@ -254,6 +286,31 @@ export default function AgentTroubleshootModal({
                         >
                           {copiedField === 'token' ? <Check className="h-3.5 w-3.5 text-success-600" /> : <Copy className="h-3.5 w-3.5" />}
                           <span>{copiedField === 'token' ? 'Copied' : 'Copy'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Auth Endpoint URL */}
+                    <div>
+                      <div className="flex items-center justify-between text-[11px] font-medium text-muted mb-1">
+                        <span>Auth Endpoint URL</span>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-lg border border-line bg-paper px-3 py-1.5 font-mono text-xs">
+                        <span className="flex-1 truncate select-all">
+                          {typeof window !== 'undefined' ? window.location.origin : ''}/api/pusher/auth
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            copyToClipboard(
+                              `${typeof window !== 'undefined' ? window.location.origin : ''}/api/pusher/auth`,
+                              'authEndpoint'
+                            )
+                          }
+                          className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 font-sans text-xs font-semibold"
+                        >
+                          {copiedField === 'authEndpoint' ? <Check className="h-3.5 w-3.5 text-success-600" /> : <Copy className="h-3.5 w-3.5" />}
+                          <span>{copiedField === 'authEndpoint' ? 'Copied' : 'Copy'}</span>
                         </button>
                       </div>
                     </div>
@@ -346,18 +403,36 @@ export default function AgentTroubleshootModal({
           </div>
         </div>
 
-        {/* Modal Footer */}
-        <div className="flex items-center justify-between px-6 py-3 border-t border-line bg-surface/80">
-          <span className="text-xs text-muted">SmartPrint Agent Gateway • Pusher Realtime</span>
+        {/* Modal Footer (Sticky, cannot shrink) */}
+        <div className="flex-shrink-0 flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-3.5 border-t border-line bg-surface/90">
+          <button
+            type="button"
+            onClick={copyAllConfig}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100/80 px-3 py-1.5 rounded-xl border border-brand-200 transition-colors cursor-pointer"
+          >
+            {copiedField === 'all_config' ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-success-600" />
+                <span className="text-success-700">Copied Full Config (.env)!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5 text-brand-600" />
+                <span>Copy Full Agent Config</span>
+              </>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-ink text-white px-4 py-2 text-xs font-bold hover:bg-ink/90 transition-colors cursor-pointer"
+            className="rounded-xl bg-ink text-white px-5 py-2 text-xs font-bold hover:bg-ink/90 transition-colors cursor-pointer ml-auto"
           >
             Got it, Close Guide
           </button>
         </div>
       </div>
     </div>
+  </div>
   )
 }

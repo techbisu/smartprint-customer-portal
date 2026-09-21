@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { RateCardItem, Shop, ShopBanner, PaymentMethod } from '@/lib/types'
 import { calculatePrice } from '@/lib/pricing'
 import { supabaseBrowser, UPLOAD_BUCKET, MAX_UPLOAD_BYTES } from '@/lib/supabaseBrowser'
@@ -53,33 +53,8 @@ type StudioType = 'none' | 'id-card' | 'legal-stamp'
 export default function UploadFlow({ shop, items, banners = [] }: Props) {
   // Only provide services that are currently active in shop settings
   const availableItems = useMemo(() => {
-    const active = items.filter((i) => i.is_active !== false)
-    if (active.length > 0) return active
-
-    // Fallback only if no items were provided at all
-    const hasLegal = items.some(
-      (i) =>
-        i.display_name.toLowerCase().includes('legal') ||
-        i.display_name.toLowerCase().includes('stamp') ||
-        i.service_code === 'rent_agreement' ||
-        i.service_code === 'legal_stamp'
-    )
-    if (hasLegal) return items.filter((i) => i.is_active !== false)
-
-    const legalItem: RateCardItem = {
-      id: 'default-legal-stamp-item',
-      shop_id: shop.id,
-      category: 'Legal & Official',
-      service_code: 'rent_agreement',
-      display_name: 'Legal / Stamp Paper',
-      pricing_model: 'per_page',
-      price_bw: 5.0,
-      price_color: null,
-      supports_duplex: false,
-      is_active: true,
-    }
-    return [...items.filter((i) => i.is_active !== false), legalItem]
-  }, [items, shop.id])
+    return items.filter((i) => i.is_active !== false)
+  }, [items])
 
   // Find Document Print as default front-page option
   const initialDefaultItem = useMemo(() => {
@@ -116,6 +91,16 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
 
   const t = translations[lang] || translations.en
   const [selectedItem, setSelectedItem] = useState<RateCardItem | null>(initialDefaultItem || null)
+
+  // Keep selectedItem in sync if available services change (e.g. disabled in shop settings)
+  useEffect(() => {
+    if (selectedItem && !availableItems.some((i) => i.id === selectedItem.id)) {
+      setSelectedItem(initialDefaultItem)
+    } else if (!selectedItem && initialDefaultItem) {
+      setSelectedItem(initialDefaultItem)
+    }
+  }, [availableItems, initialDefaultItem, selectedItem])
+
   const [showAllServicesModal, setShowAllServicesModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
 
@@ -883,6 +868,19 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
               <p className="font-bold">{t.shopOfflineTitle}</p>
               <p className="text-[11px] opacity-90 mt-0.5">{t.shopOfflineMessage}</p>
             </div>
+          </div>
+        )}
+
+        {/* Notice when all services are turned off */}
+        {availableItems.length === 0 && (
+          <div className="rounded-2xl border border-line bg-white p-6 text-center space-y-2 shadow-2xs animate-fade-in">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <h3 className="text-sm font-bold text-ink">No Services Currently Available</h3>
+            <p className="text-xs text-muted leading-relaxed max-w-xs mx-auto">
+              All print services are temporarily paused for this counter. Please check back shortly or speak with the shopkeeper.
+            </p>
           </div>
         )}
 

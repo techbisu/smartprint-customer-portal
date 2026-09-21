@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { RateCardItem, Shop, ShopBanner } from '@/lib/types'
@@ -69,8 +69,8 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
   // Shop-wise Pusher Settings & Desktop Agent Setup
-  const [pusherAppKey, setPusherAppKey] = useState(shop.pusher_key || '2e5517c16c8d36b2969d')
-  const [pusherCluster, setPusherCluster] = useState(shop.pusher_cluster || 'ap2')
+  const [pusherAppKey, setPusherAppKey] = useState(shop.pusher_key || process.env.NEXT_PUBLIC_PUSHER_KEY || '2e5517c16c8d36b2969d')
+  const [pusherCluster, setPusherCluster] = useState(shop.pusher_cluster || process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2')
   const [pusherAppId, setPusherAppId] = useState(shop.pusher_app_id || '')
   const [pusherSecret, setPusherSecret] = useState(shop.pusher_secret || '')
   const [savingPusher, setSavingPusher] = useState(false)
@@ -107,6 +107,7 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
     }
     return ''
   })
+  const [showCustomImgbbKey, setShowCustomImgbbKey] = useState(false)
   const bannerImageInputRef = useRef<HTMLInputElement>(null)
 
   const sanitizeImageUrl = (url: string) => {
@@ -136,6 +137,9 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
         setBannerImageUrl(data.url)
         showToast('Image uploaded directly to ImgBB successfully!')
       } else {
+        if (data?.needsKey) {
+          setShowCustomImgbbKey(true)
+        }
         showToast(data.error || 'Failed to upload image to ImgBB')
       }
     } catch {
@@ -145,10 +149,10 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
     }
   }
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg)
     setTimeout(() => setToastMessage(null), 3000)
-  }
+  }, [])
 
   // Toggle Online / Offline
   const toggleOnline = async () => {
@@ -2095,47 +2099,72 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
                   </button>
                 </div>
 
-                {/* Direct ImgBB Upload & API Key Setup */}
-                <div className="rounded-lg bg-white p-2.5 border border-line space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-ink flex items-center gap-1">
-                      <Key className="h-3 w-3 text-brand-600" />
-                      ImgBB Upload API Key
-                    </span>
-                    <a
-                      href="https://api.imgbb.com/"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-[10px] text-brand-600 hover:underline font-semibold flex items-center gap-0.5"
-                    >
-                      Get Free Key at api.imgbb.com
-                      <ExternalLink className="h-2.5 w-2.5" />
-                    </a>
+                {/* Global ImgBB Cloud Storage Status & Optional Key Override */}
+                <div className="flex items-center justify-between text-[11px] bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-2 text-emerald-800">
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
+                    <span>Global ImgBB Cloud storage active — instant upload for any shop</span>
                   </div>
-                  <div className="flex gap-1.5">
-                    <input
-                      type="password"
-                      value={imgbbApiKey}
-                      onChange={(e) => {
-                        const val = e.target.value
-                        setImgbbApiKey(val)
-                        if (typeof window !== 'undefined') {
-                          localStorage.setItem('smartprint_imgbb_api_key', val)
-                        }
-                      }}
-                      placeholder="Paste your ImgBB API Key here (auto-saved)..."
-                      className="flex-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink focus:border-brand-600 focus:outline-none"
-                    />
-                    {imgbbApiKey && (
-                      <span className="rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700 border border-emerald-200 flex items-center">
-                        Saved
-                      </span>
-                    )}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomImgbbKey(!showCustomImgbbKey)}
+                    className="text-[10px] font-semibold text-emerald-900 underline hover:text-emerald-950 cursor-pointer whitespace-nowrap ml-2"
+                  >
+                    {showCustomImgbbKey ? 'Hide' : 'Custom Key?'}
+                  </button>
                 </div>
 
+                {showCustomImgbbKey && (
+                  <div className="rounded-xl bg-white p-2.5 border border-line space-y-1.5 animate-fade-in">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-ink flex items-center gap-1">
+                        <Key className="h-3 w-3 text-brand-600" />
+                        Optional Custom ImgBB Key (Overrides Global)
+                      </span>
+                      <a
+                        href="https://api.imgbb.com/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] text-brand-600 hover:underline font-semibold flex items-center gap-0.5"
+                      >
+                        api.imgbb.com
+                        <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="password"
+                        value={imgbbApiKey}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setImgbbApiKey(val)
+                          if (typeof window !== 'undefined') {
+                            localStorage.setItem('smartprint_imgbb_api_key', val)
+                          }
+                        }}
+                        placeholder="Leave blank to use system global IMGBB_API_KEY..."
+                        className="flex-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink focus:border-brand-600 focus:outline-none font-mono"
+                      />
+                      {imgbbApiKey && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImgbbApiKey('')
+                            if (typeof window !== 'undefined') {
+                              localStorage.removeItem('smartprint_imgbb_api_key')
+                            }
+                          }}
+                          className="rounded-lg bg-slate-100 hover:bg-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600 cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between text-[10px] text-muted pt-0.5">
-                  <span>Supported: Upload directly to ImgBB, or paste any i.ibb.co direct image link</span>
+                  <span>Supported: Upload directly to ImgBB, or paste any direct image link</span>
                   <a
                     href="https://imgbb.com/"
                     target="_blank"

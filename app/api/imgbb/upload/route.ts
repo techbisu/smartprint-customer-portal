@@ -4,10 +4,14 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
     const file = formData.get('file') as File | null
-    const apiKey =
-      (formData.get('apiKey') as string) ||
+    const customKey = (formData.get('apiKey') as string) || ''
+
+    // Use global environment variable for any shop, with optional custom key fallback
+    const apiKey = (
       process.env.IMGBB_API_KEY ||
-      process.env.NEXT_PUBLIC_IMGBB_API_KEY
+      process.env.NEXT_PUBLIC_IMGBB_API_KEY ||
+      customKey
+    )?.trim()
 
     if (!file) {
       return NextResponse.json({ error: 'No image file provided' }, { status: 400 })
@@ -17,7 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            'ImgBB API Key is required. Please enter your free API key from https://api.imgbb.com or set IMGBB_API_KEY in environment variables.',
+            'ImgBB API Key is not configured. Please set IMGBB_API_KEY in your .env.local file.',
           needsKey: true,
         },
         { status: 400 }

@@ -13,7 +13,16 @@ interface Props {
 
 export default function ServiceSelector({ items, language = 'en', onSelect }: Props) {
   const t = translations[language] || translations.en
-  const categories = Array.from(new Set(items.map((i) => i.category)))
+  const activeItems = items.filter((i) => i.is_active !== false)
+  const categories = Array.from(new Set(activeItems.map((i) => i.category)))
+
+  if (activeItems.length === 0) {
+    return (
+      <div className="py-8 text-center text-xs text-muted">
+        No active services available at this time.
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -25,8 +34,8 @@ export default function ServiceSelector({ items, language = 'en', onSelect }: Pr
           </div>
 
           <div className="grid grid-cols-1 gap-2.5">
-            {items
-              .filter((i) => i.category === category && i.is_active !== false)
+            {activeItems
+              .filter((i) => i.category === category)
               .map((item) => (
                 <button
                   key={item.id}

@@ -161,8 +161,8 @@ export default function ShopRegistrationPage() {
       `[SmartPrint Desktop Agent Configuration]`,
       `Shop ID: ${registeredShop.shop.id}`,
       `Access Token: ${registeredShop.shop.agent_auth_token}`,
-      `Pusher App Key: ${registeredShop.shop.pusher_key || '2e5517c16c8d36b2969d'}`,
-      `Pusher Cluster: ${registeredShop.shop.pusher_cluster || 'ap2'}`,
+      `Pusher App Key: ${registeredShop.shop.pusher_key || process.env.NEXT_PUBLIC_PUSHER_KEY || '2e5517c16c8d36b2969d'}`,
+      `Pusher Cluster: ${registeredShop.shop.pusher_cluster || process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2'}`,
       `Auth Endpoint URL: ${endpoint}`,
     ].join('\n')
 
@@ -171,8 +171,8 @@ export default function ShopRegistrationPage() {
 
   if (registeredShop) {
     const authEndpoint = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/pusher/auth`
-    const shopPusherKey = registeredShop.shop.pusher_key || '2e5517c16c8d36b2969d'
-    const shopPusherCluster = registeredShop.shop.pusher_cluster || 'ap2'
+    const shopPusherKey = registeredShop.shop.pusher_key || process.env.NEXT_PUBLIC_PUSHER_KEY || '2e5517c16c8d36b2969d'
+    const shopPusherCluster = registeredShop.shop.pusher_cluster || process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2'
 
     return (
       <main className="mx-auto min-h-screen max-w-xl px-4 py-8 bg-paper">

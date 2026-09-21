@@ -21,6 +21,11 @@ export default function AgentStatusIndicator({ shop, onToast }: AgentStatusIndic
 
   const pusherRef = useRef<Pusher | null>(null)
   const heartbeatTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const onToastRef = useRef(onToast)
+
+  useEffect(() => {
+    onToastRef.current = onToast
+  }, [onToast])
 
   // 1. Initial Status Sync via Heartbeat API
   const fetchHeartbeatStatus = useCallback(async () => {
@@ -41,8 +46,8 @@ export default function AgentStatusIndicator({ shop, onToast }: AgentStatusIndic
   useEffect(() => {
     fetchHeartbeatStatus()
 
-    const pusherKey = shop.pusher_key || '2e5517c16c8d36b2969d'
-    const pusherCluster = shop.pusher_cluster || 'ap2'
+    const pusherKey = shop.pusher_key || process.env.NEXT_PUBLIC_PUSHER_KEY || '2e5517c16c8d36b2969d'
+    const pusherCluster = shop.pusher_cluster || process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap2'
     const authToken = shop.agent_auth_token || 'demo-agent-auth-token-12345'
 
     let pusherInstance: Pusher | null = null
@@ -69,6 +74,14 @@ export default function AgentStatusIndicator({ shop, onToast }: AgentStatusIndic
         setPusherConnectionState(states.current)
       })
 
+      // Suppress noisy socket-level close warnings
+      pusherInstance.connection.bind('error', (err: any) => {
+        const code = err?.error?.data?.code
+        if (code !== 4004) {
+          console.debug('[AgentStatus] Pusher connection status:', err?.error?.data?.message || err)
+        }
+      })
+
       // Presence Channel subscription
       const presenceChannelName = `presence-shop-${shop.id}`
       const presenceChannel = pusherInstance.subscribe(presenceChannelName)
@@ -92,14 +105,14 @@ export default function AgentStatusIndicator({ shop, onToast }: AgentStatusIndic
         if (member.id?.startsWith('agent-') || member.info?.role === 'agent') {
           setIsOnline(true)
           setLastSeen(Date.now())
-          if (onToast) onToast('Desktop Agent joined channel')
+          onToastRef.current?.('Desktop Agent joined channel')
         }
       })
 
       presenceChannel.bind('pusher:member_removed', (member: any) => {
         if (member.id?.startsWith('agent-') || member.info?.role === 'agent') {
           setIsOnline(false)
-          if (onToast) onToast('Desktop Agent disconnected')
+          onToastRef.current?.('Desktop Agent disconnected')
         }
       })
 
@@ -145,12 +158,15 @@ export default function AgentStatusIndicator({ shop, onToast }: AgentStatusIndic
       clearInterval(pollInterval)
       if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current)
       if (pusherInstance) {
-        pusherInstance.unsubscribe(`presence-shop-${shop.id}`)
-        pusherInstance.unsubscribe(`private-shop-${shop.id}`)
-        pusherInstance.disconnect()
+        try {
+          pusherInstance.disconnect()
+        } catch {
+          // ignore disconnect race on unmount
+        }
+        pusherRef.current = null
       }
     }
-  }, [shop.id, shop.pusher_key, shop.pusher_cluster, shop.agent_auth_token, fetchHeartbeatStatus, onToast])
+  }, [shop.id, shop.pusher_key, shop.pusher_cluster, shop.agent_auth_token, fetchHeartbeatStatus])
 
   // 2b. Listen for global open guide request
   useEffect(() => {
@@ -163,10 +179,12 @@ export default function AgentStatusIndicator({ shop, onToast }: AgentStatusIndic
   const handleReconnect = async () => {
     setReconnecting(true)
     try {
-      // Re-trigger Pusher connection
+      // Re-trigger Pusher connection only if disconnected or failed
       if (pusherRef.current) {
-        pusherRef.current.disconnect()
-        pusherRef.current.connect()
+        const state = pusherRef.current.connection.state
+        if (state === 'disconnected' || state === 'failed' || state === 'unavailable') {
+          pusherRef.current.connect()
+        }
       }
 
       // Send Ping to Agent
