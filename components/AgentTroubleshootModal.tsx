@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   X,
   RefreshCw,
@@ -48,6 +49,21 @@ export default function AgentTroubleshootModal({
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [showToken, setShowToken] = useState(false)
   const [simulating, setSimulating] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (!isOpen) return
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = originalOverflow
+    }
+  }, [isOpen])
 
   // Listen for Escape key to close modal
   useEffect(() => {
@@ -59,7 +75,7 @@ export default function AgentTroubleshootModal({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -100,9 +116,9 @@ export default function AgentTroubleshootModal({
     }
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-ink/60 backdrop-blur-xs p-3 sm:p-5 md:p-6 animate-fade-in"
+      className="fixed inset-0 z-50 overflow-y-auto bg-ink/70 backdrop-blur-xs p-3 sm:p-5 md:p-6 animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -467,6 +483,7 @@ export default function AgentTroubleshootModal({
         </div>
       </div>
     </div>
-  </div>
+  </div>,
+  document.body
   )
 }
