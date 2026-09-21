@@ -199,6 +199,40 @@ export default function AgentTroubleshootModal({
                 </button>
               </div>
             </div>
+
+            {/* Quick Auth Endpoint URL copy */}
+            <div className="mt-3 pt-3 border-t border-line/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted flex-shrink-0">
+                  Auth Endpoint URL:
+                </span>
+                <span className="font-mono text-xs text-ink bg-white/90 border border-line rounded px-2 py-0.5 truncate select-all">
+                  {typeof window !== 'undefined' ? window.location.origin : ''}/api/pusher/auth
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  copyToClipboard(
+                    `${typeof window !== 'undefined' ? window.location.origin : ''}/api/pusher/auth`,
+                    'authEndpointTop'
+                  )
+                }
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 bg-white hover:bg-brand-50 border border-line shadow-2xs px-2.5 py-1 rounded-lg transition-all cursor-pointer flex-shrink-0 self-start sm:self-auto"
+              >
+                {copiedField === 'authEndpointTop' ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-success-600" />
+                    <span className="text-success-700 font-bold">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5 text-brand-600" />
+                    <span>Copy URL</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Step-by-Step Troubleshooting Checklist */}
