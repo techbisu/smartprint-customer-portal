@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -28,6 +28,10 @@ import {
 
 export default function ShopRegistrationPage() {
   const router = useRouter()
+
+  useEffect(() => {
+    document.title = 'Register New Shop | SmartPrint'
+  }, [])
 
   const [shopName, setShopName] = useState('')
   const [slug, setSlug] = useState('')

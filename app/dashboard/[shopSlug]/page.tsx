@@ -1,7 +1,22 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { supabaseAdmin, mockShops, mockRateCards, mockBanners } from '@/lib/supabaseAdmin'
 import { RateCardItem, Shop, ShopBanner } from '@/lib/types'
 import ShopAdminPanel from './ShopAdminPanel'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ shopSlug: string }>
+}): Promise<Metadata> {
+  const { shopSlug } = await params
+  const data = await getAdminData(shopSlug)
+  const shopName = data?.shop?.shop_name || 'Shop Admin'
+  return {
+    title: `${shopName} | Shop Admin Portal`,
+    description: `Shop management dashboard, live orders, rate cards, and printer agent settings for ${shopName}.`,
+  }
+}
 
 async function getAdminData(slug: string): Promise<{
   shop: Shop

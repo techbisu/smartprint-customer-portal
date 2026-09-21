@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -17,6 +17,10 @@ import {
 
 export default function ShopLoginPage() {
   const router = useRouter()
+
+  useEffect(() => {
+    document.title = 'Shop Admin Login | SmartPrint'
+  }, [])
   const [identifier, setIdentifier] = useState('')
   const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)

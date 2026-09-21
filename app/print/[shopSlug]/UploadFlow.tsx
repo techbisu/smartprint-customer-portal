@@ -101,6 +101,13 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
     }
   }, [availableItems, initialDefaultItem, selectedItem])
 
+  // Sync title for customer print page
+  useEffect(() => {
+    if (shop?.shop_name) {
+      document.title = `${shop.shop_name} | Customer Print Portal`
+    }
+  }, [shop?.shop_name])
+
   const [showAllServicesModal, setShowAllServicesModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
 

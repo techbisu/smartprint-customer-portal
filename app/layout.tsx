@@ -9,11 +9,14 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: 'SmartPrint Customer Portal',
-  description: 'Scan, upload, print — mobile-first print shop customer portal for picking services, uploading files, calculating prices, and paying.',
+  title: {
+    default: 'SmartPrint | Instant Cloud Print Portal',
+    template: '%s | SmartPrint',
+  },
+  description: 'Scan, upload, print — cloud print shop portal for picking services, uploading files, calculating prices, and paying.',
   openGraph: {
-    title: 'SmartPrint Customer Portal',
-    description: 'Scan, upload, print — mobile-first print shop customer portal for picking services, uploading files, calculating prices, and paying.',
+    title: 'SmartPrint | Instant Cloud Print Portal',
+    description: 'Scan, upload, print — cloud print shop portal for picking services, uploading files, calculating prices, and paying.',
   },
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { RateCardItem, Shop, ShopBanner } from '@/lib/types'
@@ -61,6 +61,13 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
   const [items, setItems] = useState<RateCardItem[]>(initialItems)
   const [banners, setBanners] = useState<ShopBanner[]>(initialBanners)
   const [activeTab, setActiveTab] = useState<TabKey>('pricing')
+
+  // Set page title for Shop Admin Portal
+  useEffect(() => {
+    if (shop?.shop_name) {
+      document.title = `${shop.shop_name} | Shop Admin Portal`
+    }
+  }, [shop?.shop_name])
 
   const [savingStatus, setSavingStatus] = useState(false)
   const [savingGateway, setSavingGateway] = useState(false)

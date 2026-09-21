@@ -1,7 +1,22 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { supabaseAdmin, mockShops, mockRateCards, mockBanners } from '@/lib/supabaseAdmin'
 import { RateCardItem, Shop, ShopBanner } from '@/lib/types'
 import UploadFlow from './UploadFlow'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ shopSlug: string }>
+}): Promise<Metadata> {
+  const { shopSlug } = await params
+  const data = await getShopData(shopSlug)
+  const shopName = data?.shop?.shop_name || 'Print Shop'
+  return {
+    title: `${shopName} | Customer Print Portal`,
+    description: `Upload files, select print specifications, calculate live costs, and order prints from ${shopName}.`,
+  }
+}
 
 async function getShopData(
   slug: string
