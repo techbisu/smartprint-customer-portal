@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin, mockPrintJobs } from '@/lib/supabaseAdmin'
+import { supabaseAdmin, mockPrintJobs, mockShops } from '@/lib/supabaseAdmin'
 import { triggerPusherEvent } from '@/lib/pusherTrigger'
 import { NewJobRequest, NewJobResponse } from '@/lib/types'
 import { createCashfreeOrder } from '@/lib/cashfree'
+import { getShopTrialStatus } from '@/lib/subscription'
 
 export async function POST(req: NextRequest) {
   let body: NewJobRequest
@@ -47,27 +48,29 @@ export async function POST(req: NextRequest) {
 
   const { data: shop, error: shopError } = await supabaseAdmin
     .from('shops')
-    .select('id, upi_vpa, shop_name, is_online, pusher_key, pusher_cluster, pusher_app_id, pusher_secret, cashfree_app_id, cashfree_secret_key, cashfree_env')
+    .select('*')
     .eq('slug', shopSlug)
     .single()
 
   let currentShop: any = shop
-  if (!currentShop && shopSlug === 'demo-shop') {
-    currentShop = {
-      id: 'd3b07384-d113-4f9e-9c2b-2f3b7c8a1e50',
-      upi_vpa: 'demoshop@upi',
-      shop_name: 'Apex Quick Print & Xerox',
-      is_online: true,
-      pusher_key: '2e5517c16c8d36b2969d',
-      pusher_cluster: 'ap2',
-      pusher_app_id: '',
-      pusher_secret: '',
-    }
+  if (!currentShop) {
+    const mock = mockShops.find((s) => s.slug === shopSlug)
+    if (mock) currentShop = mock
   }
 
   if (!currentShop) {
     return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
   }
+
+  // Enforce 15-day trial / active subscription lock
+  const trialStatus = getShopTrialStatus(currentShop)
+  if (trialStatus.isLocked) {
+    return NextResponse.json(
+      { error: 'This print shop is currently inactive (15-day trial expired). Online orders cannot be placed.' },
+      { status: 403 }
+    )
+  }
+
   if (!currentShop.is_online) {
     return NextResponse.json({ error: 'This shop is not accepting print jobs right now' }, { status: 409 })
   }

@@ -65,6 +65,9 @@ export async function POST(req: NextRequest) {
       pusher_secret: pusherSecret?.trim() || process.env.PUSHER_SECRET || '',
       pusher_cluster: pusherCluster?.trim() || process.env.PUSHER_CLUSTER || 'ap2',
       created_at: new Date().toISOString(),
+      plan_type: 'trial',
+      subscription_status: 'trialing',
+      trial_ends_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
     }
 
     mockShops.push(newShop as any)

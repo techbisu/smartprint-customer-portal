@@ -22,6 +22,9 @@ export interface Shop {
   pusher_cluster?: string
   default_language?: 'en' | 'bn' | 'hi' | string
   created_at?: string
+  plan_type?: 'trial' | 'pro' | 'enterprise'
+  subscription_status?: 'trialing' | 'active' | 'expired' | 'suspended'
+  trial_ends_at?: string
 }
 
 export interface ShopBanner {

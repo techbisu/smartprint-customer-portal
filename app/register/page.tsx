@@ -475,9 +475,15 @@ export default function ShopRegistrationPage() {
           Set up your instant customer print portal in 60 seconds. Direct UPI payments, automated print queue.
         </p>
 
-        <div className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-[11px] font-semibold text-brand-700 shadow-2xs mt-1">
-          <Sparkles className="h-3.5 w-3.5 text-marigold-500" />
-          <span>SCAN &bull; UPLOAD &bull; PAY &bull; PRINT</span>
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-1.5">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-800 shadow-2xs">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Includes 15-Day Free Trial</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1 text-[11px] font-semibold text-brand-700 shadow-2xs">
+            <Sparkles className="h-3.5 w-3.5 text-marigold-500" />
+            <span>No Credit Card Required</span>
+          </div>
         </div>
       </div>
 

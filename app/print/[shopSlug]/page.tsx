@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { supabaseAdmin, mockShops, mockRateCards, mockBanners } from '@/lib/supabaseAdmin'
 import { RateCardItem, Shop, ShopBanner } from '@/lib/types'
+import { getShopTrialStatus } from '@/lib/subscription'
 import UploadFlow from './UploadFlow'
+import ShopSuspendedView from '@/components/ShopSuspendedView'
 
 export async function generateMetadata({
   params,
@@ -12,6 +14,15 @@ export async function generateMetadata({
   const { shopSlug } = await params
   const data = await getShopData(shopSlug)
   const shopName = data?.shop?.shop_name || 'Print Shop'
+  const trialStatus = getShopTrialStatus(data?.shop)
+
+  if (trialStatus.isLocked) {
+    return {
+      title: `${shopName} | Portal Offline`,
+      description: `${shopName} online print portal is temporarily offline.`,
+    }
+  }
+
   return {
     title: `${shopName} | Customer Print Portal`,
     description: `Upload files, select print specifications, calculate live costs, and order prints from ${shopName}.`,
@@ -90,6 +101,11 @@ export default async function ShopPrintPage({
 
   if (!data) {
     notFound()
+  }
+
+  const trialStatus = getShopTrialStatus(data.shop)
+  if (trialStatus.isLocked) {
+    return <ShopSuspendedView shop={data.shop} />
   }
 
   return <UploadFlow shop={data.shop} items={data.items} banners={data.banners} />

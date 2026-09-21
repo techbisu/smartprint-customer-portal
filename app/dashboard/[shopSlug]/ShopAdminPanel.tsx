@@ -9,6 +9,8 @@ import { supabaseBrowser, UPLOAD_BUCKET } from '@/lib/supabaseBrowser'
 import BannerSlider from '@/components/BannerSlider'
 import QRStickerGenerator from '@/components/QRStickerGenerator'
 import AgentStatusIndicator from '@/components/AgentStatusIndicator'
+import ShopLockedModal from '@/components/ShopLockedModal'
+import { getShopTrialStatus } from '@/lib/subscription'
 import {
   Store,
   Tag,
@@ -45,6 +47,9 @@ import {
   Image as ImageIcon,
   Upload,
   Loader2,
+  Lock,
+  Clock,
+  AlertTriangle,
 } from 'lucide-react'
 
 interface Props {
@@ -68,6 +73,14 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
       document.title = `${shop.shop_name} | Shop Admin Portal`
     }
   }, [shop?.shop_name])
+
+  // 15-Day Free Trial Status & Lock Check
+  const trialStatus = getShopTrialStatus(shop)
+  const [showLockedModal, setShowLockedModal] = useState(trialStatus.isLocked)
+
+  useEffect(() => {
+    setShowLockedModal(trialStatus.isLocked)
+  }, [trialStatus.isLocked])
 
   const [savingStatus, setSavingStatus] = useState(false)
   const [savingGateway, setSavingGateway] = useState(false)
@@ -163,6 +176,11 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
 
   // Toggle Online / Offline
   const toggleOnline = async () => {
+    if (trialStatus.isLocked) {
+      setShowLockedModal(true)
+      showToast('⚠️ Shop is locked (15-day trial expired). Reactivate to resume counter.')
+      return
+    }
     const newStatus = !shop.is_online
     setSavingStatus(true)
     try {
@@ -184,6 +202,11 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
 
   // Toggle specific payment method (counter, upi, online)
   const togglePaymentMethod = async (method: 'counter' | 'upi' | 'online') => {
+    if (trialStatus.isLocked) {
+      setShowLockedModal(true)
+      showToast('⚠️ Shop is locked (15-day trial expired).')
+      return
+    }
     let updatePayload: Record<string, boolean> = {}
     let newStatus = false
     let label = ''
@@ -239,6 +262,11 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
   const [togglingItemId, setTogglingItemId] = useState<string | null>(null)
 
   const toggleItemActive = async (item: RateCardItem) => {
+    if (trialStatus.isLocked) {
+      setShowLockedModal(true)
+      showToast('⚠️ Shop is locked (15-day trial expired).')
+      return
+    }
     const newActive = item.is_active === false ? true : false
     setTogglingItemId(item.id)
     try {
@@ -648,6 +676,34 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
                 />
                 <span>{shop.is_online ? 'Counter Live' : 'Counter Paused'}</span>
               </button>
+
+              {/* Subscription & Trial Status Badge */}
+              {trialStatus.isLocked ? (
+                <button
+                  type="button"
+                  onClick={() => setShowLockedModal(true)}
+                  className="flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-700 shadow-2xs hover:bg-rose-100 transition-all cursor-pointer animate-pulse"
+                  title="Click to view lock details and reactivation options"
+                >
+                  <Lock className="h-3.5 w-3.5 text-rose-600" />
+                  <span>Trial Expired • Locked</span>
+                </button>
+              ) : trialStatus.isTrial ? (
+                <button
+                  type="button"
+                  onClick={() => setShowLockedModal(true)}
+                  className="flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-800 shadow-2xs hover:bg-amber-100 transition-all cursor-pointer"
+                  title={`15-day free trial ends on ${trialStatus.trialEndsAt.toLocaleDateString()}`}
+                >
+                  <Clock className="h-3 w-3 text-amber-600" />
+                  <span>{trialStatus.daysRemaining}d Trial Left</span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-800 shadow-2xs">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Pro Plan</span>
+                </div>
+              )}
 
               <Link
                 href={`/print/${shop.slug}`}
@@ -2254,6 +2310,17 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
           </div>
         </div>
       )}
+
+      {/* 15-Day Free Trial Expired & Locked Modal */}
+      <ShopLockedModal
+        isOpen={showLockedModal}
+        shop={shop}
+        trialStatus={trialStatus}
+        onUpdateShop={(updatedShop) => {
+          setShop((prev) => ({ ...prev, ...updatedShop }))
+        }}
+        onToast={showToast}
+      />
     </main>
   )
 }

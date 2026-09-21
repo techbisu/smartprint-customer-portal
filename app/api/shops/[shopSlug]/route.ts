@@ -65,6 +65,9 @@ export async function PATCH(
     const lang = String(body.default_language).toLowerCase().trim()
     shop.default_language = ['en', 'bn', 'hi'].includes(lang) ? lang : 'en'
   }
+  if (body.plan_type !== undefined) shop.plan_type = body.plan_type
+  if (body.subscription_status !== undefined) shop.subscription_status = body.subscription_status
+  if (body.trial_ends_at !== undefined) shop.trial_ends_at = body.trial_ends_at
 
   if (body.regenerate_token) {
     shop.agent_auth_token = `token-${crypto.randomUUID().slice(0, 18)}`
@@ -93,6 +96,9 @@ export async function PATCH(
       pusher_secret: shop.pusher_secret,
       pusher_cluster: shop.pusher_cluster,
       agent_auth_token: shop.agent_auth_token,
+      plan_type: shop.plan_type,
+      subscription_status: shop.subscription_status,
+      trial_ends_at: shop.trial_ends_at,
     })
     .eq('id', shop.id)
 
