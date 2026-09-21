@@ -1115,7 +1115,7 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
 
         {/* ================= TAB 4: SETTINGS & AGENT ================= */}
         {activeTab === 'settings' && (
-          <div className="max-w-xl space-y-6">
+          <div className="space-y-6">
             <div>
               <h2 className="text-lg font-bold text-ink">Shop Profile & Desktop Agent</h2>
               <p className="text-xs text-muted">
@@ -1123,772 +1123,780 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
               </p>
             </div>
 
-            {/* Shop Details Form */}
-            <div className="rounded-2xl border border-line bg-white p-5 shadow-2xs">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">
-                Shop Information
-              </h3>
-              <form onSubmit={handleSaveSettings} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-ink mb-1">Shop Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={editShopName}
-                    onChange={(e) => setEditShopName(e.target.value)}
-                    className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-ink mb-1">
-                    UPI VPA ID (For Direct Payments)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editUpi}
-                    onChange={(e) => setEditUpi(e.target.value)}
-                    className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-ink mb-1">Phone</label>
-                    <input
-                      type="text"
-                      value={editPhone}
-                      onChange={(e) => setEditPhone(e.target.value)}
-                      className="w-full rounded-xl border border-line bg-white px-3 py-2 text-xs text-ink focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-ink mb-1">Address</label>
-                    <input
-                      type="text"
-                      value={editAddress}
-                      onChange={(e) => setEditAddress(e.target.value)}
-                      className="w-full rounded-xl border border-line bg-white px-3 py-2 text-xs text-ink focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-ink mb-1">
-                    Default Customer Language
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'en', label: 'English', sub: 'Default' },
-                      { id: 'bn', label: 'বাংলা', sub: 'Bengali' },
-                      { id: 'hi', label: 'हिंदी', sub: 'Hindi' },
-                    ].map((langOption) => {
-                      const isSelected = editDefaultLanguage === langOption.id
-                      return (
-                        <button
-                          key={langOption.id}
-                          type="button"
-                          onClick={() => setEditDefaultLanguage(langOption.id as 'en' | 'bn' | 'hi')}
-                          className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
-                            isSelected
-                              ? 'border-brand-600 bg-brand-50/70 text-brand-900 font-bold shadow-xs'
-                              : 'border-line bg-white text-muted hover:bg-paper hover:text-ink'
-                          }`}
-                        >
-                          <span className="text-sm font-bold">{langOption.label}</span>
-                          <span className="text-[10px] opacity-80">{langOption.sub}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <p className="text-[11px] text-muted mt-1">
-                    Customers visiting your print portal will see this language by default.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-ink mb-1">
-                    Update Access Password / PIN (Optional)
-                  </label>
-                  <input
-                    type="password"
-                    value={editPassword}
-                    onChange={(e) => setEditPassword(e.target.value)}
-                    placeholder="Enter new password to change (leave blank to keep current)"
-                    className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-xs text-ink focus:border-brand-600 focus:outline-none"
-                  />
-                  <p className="text-[11px] text-muted mt-1">
-                    Used for logging into this admin panel. Hashed securely with bcrypt.
-                  </p>
-                </div>
-
-                <button
-                  type="submit"
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 transition-colors cursor-pointer"
-                >
-                  <Save className="h-3.5 w-3.5" />
-                  Save Shop Details
-                </button>
-              </form>
-            </div>
-
-            {/* Desktop Agent Setup & Realtime Pusher Connection */}
-            <div className="rounded-2xl border border-brand-200 bg-brand-50/20 p-5 shadow-2xs space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-brand-100 pb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Cpu className="h-5 w-5 text-brand-600 flex-shrink-0" />
-                    <h3 className="text-base font-bold text-ink">Agent setup</h3>
-                  </div>
-                  <p className="mt-1 text-xs text-muted leading-relaxed">
-                    Enter your shop credentials, then choose the printers this workstation should use.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (typeof window !== 'undefined') {
-                        window.dispatchEvent(new CustomEvent('open-agent-troubleshoot-guide'))
-                      }
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-semibold text-ink shadow-2xs hover:bg-paper active:scale-95 transition-all cursor-pointer"
-                  >
-                    <HelpCircle className="h-3.5 w-3.5 text-brand-600" />
-                    <span>Troubleshoot Guide</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={copyAllAgentConfig}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-brand-700 transition-colors flex-shrink-0 cursor-pointer"
-                  >
-                    {copiedKey === 'all' ? (
-                      <>
-                        <Check className="h-3.5 w-3.5 text-white" />
-                        <span>Copied All!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3.5 w-3.5" />
-                        <span>Copy All Agent Config</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* 1. Shop credentials */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-ink flex items-center gap-1.5 uppercase tracking-wider">
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-200 text-[10px] font-bold text-brand-900">
-                    1
-                  </span>
-                  Shop credentials
-                </h4>
-
-                <div className="space-y-2.5">
-                  {/* Shop ID */}
-                  <div>
-                    <label className="block text-[11px] font-medium text-muted mb-1">
-                      Shop ID
-                    </label>
-                    <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-2 shadow-2xs">
-                      <span className="flex-1 font-mono text-xs text-ink truncate select-all">
-                        {shop.id}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => copySetting(shop.id, 'shopId')}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-0.5 rounded hover:bg-brand-50"
-                      >
-                        {copiedKey === 'shopId' ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 text-success-600" />
-                            <span className="text-success-600">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Access Token */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-[11px] font-medium text-muted">
-                        Access token
-                      </label>
-                      <button
-                        type="button"
-                        onClick={handleRegenerateToken}
-                        disabled={regeneratingToken}
-                        className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted hover:text-danger-600"
-                        title="Regenerate this token if compromised"
-                      >
-                        <RefreshCw className={`h-2.5 w-2.5 ${regeneratingToken ? 'animate-spin' : ''}`} />
-                        <span>Regenerate</span>
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-2 shadow-2xs">
-                      <span className="flex-1 font-mono text-xs text-ink truncate select-all">
-                        {showAgentToken
-                          ? shop.agent_auth_token || 'demo-agent-auth-token-12345'
-                          : '•'.repeat(32)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowAgentToken(!showAgentToken)}
-                        className="text-muted hover:text-ink p-1 rounded hover:bg-paper"
-                        title={showAgentToken ? 'Hide token' : 'Show token'}
-                      >
-                        {showAgentToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          copySetting(shop.agent_auth_token || 'demo-agent-auth-token-12345', 'token')
-                        }
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-0.5 rounded hover:bg-brand-50"
-                      >
-                        {copiedKey === 'token' ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 text-success-600" />
-                            <span className="text-success-600">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. Realtime connection (Pusher) */}
-              <div className="space-y-3 pt-3 border-t border-brand-100">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-ink flex items-center gap-1.5 uppercase tracking-wider">
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-200 text-[10px] font-bold text-brand-900">
-                      2
-                    </span>
-                    Realtime connection
-                  </h4>
-                  <span className="text-[10px] font-semibold text-brand-700 bg-brand-100/60 px-2 py-0.5 rounded-full">
-                    Shop-wise Isolated
-                  </span>
-                </div>
-
-                <form onSubmit={handleSavePusher} className="space-y-3">
-                  {/* Pusher app key */}
-                  <div>
-                    <label className="block text-[11px] font-medium text-muted mb-1">
-                      Pusher app key
-                    </label>
-                    <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-1.5 shadow-2xs">
-                      <input
-                        type="text"
-                        value={pusherAppKey}
-                        onChange={(e) => setPusherAppKey(e.target.value)}
-                        placeholder="2e5517c16c8d36b2969d"
-                        className="flex-1 font-mono text-xs text-ink bg-transparent focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => copySetting(pusherAppKey, 'pusherKey')}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-0.5 rounded hover:bg-brand-50"
-                      >
-                        {copiedKey === 'pusherKey' ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 text-success-600" />
-                            <span className="text-success-600">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Pusher cluster */}
-                  <div>
-                    <label className="block text-[11px] font-medium text-muted mb-1">
-                      Pusher cluster
-                    </label>
-                    <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-1.5 shadow-2xs">
-                      <input
-                        type="text"
-                        value={pusherCluster}
-                        onChange={(e) => setPusherCluster(e.target.value)}
-                        placeholder="ap2"
-                        className="flex-1 font-mono text-xs text-ink bg-transparent focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => copySetting(pusherCluster, 'cluster')}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-0.5 rounded hover:bg-brand-50"
-                      >
-                        {copiedKey === 'cluster' ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 text-success-600" />
-                            <span className="text-success-600">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Auth endpoint URL */}
-                  <div>
-                    <label className="block text-[11px] font-medium text-muted mb-1">
-                      Auth endpoint URL
-                    </label>
-                    <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-2 shadow-2xs">
-                      <span className="flex-1 font-mono text-xs text-ink truncate select-all">
-                        {typeof window !== 'undefined' ? window.location.origin : ''}/api/pusher/auth
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          copySetting(
-                            `${typeof window !== 'undefined' ? window.location.origin : ''}/api/pusher/auth`,
-                            'authEndpoint'
-                          )
-                        }
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-0.5 rounded hover:bg-brand-50"
-                      >
-                        {copiedKey === 'authEndpoint' ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 text-success-600" />
-                            <span className="text-success-600">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Backend Credentials for Event Signing */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                    <div>
-                      <label className="block text-[11px] font-medium text-muted mb-1">
-                        Pusher App ID (Server Trigger)
-                      </label>
-                      <input
-                        type="text"
-                        value={pusherAppId}
-                        onChange={(e) => setPusherAppId(e.target.value)}
-                        placeholder="e.g. 1827364"
-                        className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-mono text-ink placeholder:font-sans focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-[11px] font-medium text-muted">
-                          Pusher Secret Key
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setShowPusherSecret(!showPusherSecret)}
-                          className="text-[10px] font-semibold text-muted hover:text-ink"
-                        >
-                          {showPusherSecret ? 'Hide' : 'Show'}
-                        </button>
-                      </div>
-                      <input
-                        type={showPusherSecret ? 'text' : 'password'}
-                        value={pusherSecret}
-                        onChange={(e) => setPusherSecret(e.target.value)}
-                        placeholder="Pusher Secret"
-                        className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-mono text-ink focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1">
-                    <p className="text-[11px] text-muted">
-                      Configure your shop&apos;s custom Pusher credentials to isolate customer print events.
-                    </p>
-                    <button
-                      type="submit"
-                      disabled={savingPusher}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-ink px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-ink/80 transition-colors flex-shrink-0 cursor-pointer disabled:opacity-50"
-                    >
-                      <Save className="h-3.5 w-3.5" />
-                      <span>{savingPusher ? 'Saving…' : 'Save Pusher Settings'}</span>
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            {/* ================= PAYMENT METHODS & GATEWAY CONFIGURATION ================= */}
-            <div className="rounded-2xl border border-line bg-white p-5 shadow-2xs space-y-5">
-              <div>
-                <h3 className="text-sm font-bold text-ink flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-brand-600" />
-                  <span>Customer Payment Methods (Checkout Options)</span>
-                </h3>
-                <p className="text-xs text-muted mt-0.5">
-                  Control which payment methods are available to your customers during upload checkout.
-                </p>
-              </div>
-
-              {/* 3 Payment Method Toggles */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {/* 1. Pay at Counter (Cash) */}
-                <div
-                  className={`flex flex-col justify-between rounded-xl border p-4 transition-all ${
-                    shop.enable_counter_pay !== false
-                      ? 'border-line bg-paper/60'
-                      : 'border-slate-200 bg-slate-50/70 opacity-75'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 text-xs font-bold">
-                          ₹
-                        </div>
-                        <span className="text-xs font-bold text-ink">Pay at Counter</span>
-                      </div>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                          shop.enable_counter_pay !== false
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-slate-200 text-slate-600'
-                        }`}
-                      >
-                        {shop.enable_counter_pay !== false ? 'Active (ON)' : 'Disabled (OFF)'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-muted leading-relaxed">
-                      Customer pays cash at your counter when picking up their prints.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between">
-                    <span className="text-[10px] font-medium text-muted">Cash / Offline</span>
-                    <button
-                      type="button"
-                      onClick={() => togglePaymentMethod('counter')}
-                      disabled={savingGateway}
-                      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all shadow-2xs cursor-pointer ${
-                        shop.enable_counter_pay !== false
-                          ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
-                          : 'border border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700'
-                      }`}
-                    >
-                      {shop.enable_counter_pay !== false ? (
-                        <>
-                          <ToggleRight className="h-4 w-4 text-emerald-600" />
-                          <span>Turn OFF</span>
-                        </>
-                      ) : (
-                        <>
-                          <ToggleLeft className="h-4 w-4 text-white" />
-                          <span>Turn ON</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* 2. UPI Pay (Deeplink) */}
-                <div
-                  className={`flex flex-col justify-between rounded-xl border p-4 transition-all ${
-                    shop.enable_upi_pay !== false
-                      ? 'border-line bg-paper/60'
-                      : 'border-slate-200 bg-slate-50/70 opacity-75'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-100 text-brand-700 text-xs font-bold">
-                          UPI
-                        </div>
-                        <span className="text-xs font-bold text-ink">UPI Pay</span>
-                      </div>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                          shop.enable_upi_pay !== false
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-slate-200 text-slate-600'
-                        }`}
-                      >
-                        {shop.enable_upi_pay !== false ? 'Active (ON)' : 'Disabled (OFF)'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-muted leading-relaxed">
-                      Instant 1-tap app intent opening GPay, PhonePe, Paytm, BHIM with dynamic QR.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between">
-                    <span className="text-[10px] font-medium text-muted">VPA: {shop.upi_vpa || 'Not set'}</span>
-                    <button
-                      type="button"
-                      onClick={() => togglePaymentMethod('upi')}
-                      disabled={savingGateway}
-                      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all shadow-2xs cursor-pointer ${
-                        shop.enable_upi_pay !== false
-                          ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
-                          : 'border border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700'
-                      }`}
-                    >
-                      {shop.enable_upi_pay !== false ? (
-                        <>
-                          <ToggleRight className="h-4 w-4 text-emerald-600" />
-                          <span>Turn OFF</span>
-                        </>
-                      ) : (
-                        <>
-                          <ToggleLeft className="h-4 w-4 text-white" />
-                          <span>Turn ON</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* 3. Online Pay (Cashfree Gateway) */}
-                <div
-                  className={`flex flex-col justify-between rounded-xl border p-4 transition-all ${
-                    shop.enable_online_pay !== false && shop.payment_gateway_enabled !== false
-                      ? 'border-[#536DFE]/40 bg-[#536DFE]/5'
-                      : 'border-slate-200 bg-slate-50/70 opacity-75'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#536DFE] text-white text-xs font-black">
-                          CF
-                        </div>
-                        <span className="text-xs font-bold text-ink">Online Pay</span>
-                      </div>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                          shop.enable_online_pay !== false && shop.payment_gateway_enabled !== false
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-slate-200 text-slate-600'
-                        }`}
-                      >
-                        {shop.enable_online_pay !== false && shop.payment_gateway_enabled !== false
-                          ? 'Active (ON)'
-                          : 'Disabled (OFF)'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-muted leading-relaxed">
-                      Cards, NetBanking, Wallets, and verified UPI gateway powered by Cashfree.
-                    </p>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between">
-                    <span className="text-[10px] font-medium text-muted">Cashfree Gateway</span>
-                    <button
-                      type="button"
-                      onClick={() => togglePaymentMethod('online')}
-                      disabled={savingGateway}
-                      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all shadow-2xs cursor-pointer ${
-                        shop.enable_online_pay !== false && shop.payment_gateway_enabled !== false
-                          ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
-                          : 'border border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700'
-                      }`}
-                    >
-                      {shop.enable_online_pay !== false && shop.payment_gateway_enabled !== false ? (
-                        <>
-                          <ToggleRight className="h-4 w-4 text-emerald-600" />
-                          <span>Turn OFF</span>
-                        </>
-                      ) : (
-                        <>
-                          <ToggleLeft className="h-4 w-4 text-white" />
-                          <span>Turn ON</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Cashfree Payment Gateway Credentials Configuration */}
-              <div className="mt-4 pt-4 border-t border-line space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#536DFE] text-white text-[10px] font-black">
-                      CF
-                    </div>
-                    <span className="text-xs font-bold text-ink">Cashfree API Gateway Credentials</span>
-                  </div>
-                  <span className="text-[10px] font-semibold text-muted bg-paper px-2 py-0.5 rounded border border-line">
-                    Mode: {cashfreeEnv === 'production' ? 'Live / Production' : 'Sandbox / Test'}
-                  </span>
-                </div>
-
-                <form onSubmit={handleSaveCashfree} className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-medium text-muted mb-1">
-                        Environment Mode
-                      </label>
-                      <select
-                        value={cashfreeEnv}
-                        onChange={(e) => setCashfreeEnv(e.target.value as any)}
-                        className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-medium text-ink focus:outline-none"
-                      >
-                        <option value="sandbox">Sandbox (Testing / Pre-production)</option>
-                        <option value="production">Production (Real Money / Live)</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-medium text-muted mb-1">
-                        Cashfree App ID (Client ID)
-                      </label>
-                      <input
-                        type="text"
-                        value={cashfreeAppId}
-                        onChange={(e) => setCashfreeAppId(e.target.value)}
-                        placeholder="e.g. TEST1038472910..."
-                        className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-mono text-ink placeholder:font-sans focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-[11px] font-medium text-muted">
-                          Cashfree Secret Key
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setShowCashfreeSecret(!showCashfreeSecret)}
-                          className="text-[10px] font-semibold text-muted hover:text-ink"
-                        >
-                          {showCashfreeSecret ? 'Hide' : 'Show'}
-                        </button>
-                      </div>
-                      <input
-                        type={showCashfreeSecret ? 'text' : 'password'}
-                        value={cashfreeSecretKey}
-                        onChange={(e) => setCashfreeSecretKey(e.target.value)}
-                        placeholder="cfsk_ma_test_..."
-                        className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-mono text-ink focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                    <p className="text-[11px] text-muted">
-                      Leave blank to use the system default gateway credentials, or enter your shop&apos;s own Cashfree Merchant API keys.
-                    </p>
-                    <button
-                      type="submit"
-                      disabled={savingCashfree}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 transition-colors flex-shrink-0 cursor-pointer disabled:opacity-50"
-                    >
-                      <Save className="h-3.5 w-3.5" />
-                      <span>{savingCashfree ? 'Saving…' : 'Save Cashfree Credentials'}</span>
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            {/* ================= PRINT SERVICES VISIBILITY & TOGGLES ================= */}
-            <div className="rounded-2xl border border-line bg-white p-5 shadow-2xs space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h3 className="text-sm font-bold text-ink flex items-center gap-2">
-                    <Printer className="h-4 w-4 text-brand-600" />
-                    <span>Print Services Visibility (Turn Services On / Off)</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              {/* Left Column: Shop Details & Customer Payment Methods */}
+              <div className="space-y-6">
+                {/* Shop Details Form */}
+                <div className="rounded-2xl border border-line bg-white p-5 shadow-2xs">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">
+                    Shop Information
                   </h3>
-                  <p className="text-xs text-muted mt-0.5">
-                    Instantly hide or show specific print services from the customer upload selection menu.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('pricing')}
-                  className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1"
-                >
-                  <span>Manage Pricing</span>
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
+                  <form onSubmit={handleSaveSettings} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-ink mb-1">Shop Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={editShopName}
+                        onChange={(e) => setEditShopName(e.target.value)}
+                        className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
+                      />
+                    </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {items.map((it) => (
-                  <div
-                    key={it.id}
-                    className={`flex items-center justify-between rounded-xl border p-3 transition-all ${
-                      it.is_active !== false
-                        ? 'border-line bg-paper/50'
-                        : 'border-slate-200 bg-slate-50 opacity-70'
-                    }`}
-                  >
-                    <div className="min-w-0 pr-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-xs text-ink truncate block">
-                          {it.display_name}
-                        </span>
-                        <span
-                          className={`inline-block h-1.5 w-1.5 rounded-full ${
-                            it.is_active !== false ? 'bg-emerald-500' : 'bg-slate-400'
-                          }`}
+                    <div>
+                      <label className="block text-xs font-semibold text-ink mb-1">
+                        UPI VPA ID (For Direct Payments)
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editUpi}
+                        onChange={(e) => setEditUpi(e.target.value)}
+                        className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-ink mb-1">Phone</label>
+                        <input
+                          type="text"
+                          value={editPhone}
+                          onChange={(e) => setEditPhone(e.target.value)}
+                          className="w-full rounded-xl border border-line bg-white px-3 py-2 text-xs text-ink focus:outline-none"
                         />
                       </div>
-                      <span className="text-[10px] text-muted block">
-                        {it.category} &bull; {formatRupees(it.price_bw)} B&amp;W
-                      </span>
+                      <div>
+                        <label className="block text-xs font-semibold text-ink mb-1">Address</label>
+                        <input
+                          type="text"
+                          value={editAddress}
+                          onChange={(e) => setEditAddress(e.target.value)}
+                          className="w-full rounded-xl border border-line bg-white px-3 py-2 text-xs text-ink focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-ink mb-1">
+                        Default Customer Language
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { id: 'en', label: 'English', sub: 'Default' },
+                          { id: 'bn', label: 'বাংলা', sub: 'Bengali' },
+                          { id: 'hi', label: 'हिंदी', sub: 'Hindi' },
+                        ].map((langOption) => {
+                          const isSelected = editDefaultLanguage === langOption.id
+                          return (
+                            <button
+                              key={langOption.id}
+                              type="button"
+                              onClick={() => setEditDefaultLanguage(langOption.id as 'en' | 'bn' | 'hi')}
+                              className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'border-brand-600 bg-brand-50/70 text-brand-900 font-bold shadow-xs'
+                                  : 'border-line bg-white text-muted hover:bg-paper hover:text-ink'
+                              }`}
+                            >
+                              <span className="text-sm font-bold">{langOption.label}</span>
+                              <span className="text-[10px] opacity-80">{langOption.sub}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <p className="text-[11px] text-muted mt-1">
+                        Customers visiting your print portal will see this language by default.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-ink mb-1">
+                        Update Access Password / PIN (Optional)
+                      </label>
+                      <input
+                        type="password"
+                        value={editPassword}
+                        onChange={(e) => setEditPassword(e.target.value)}
+                        placeholder="Enter new password to change (leave blank to keep current)"
+                        className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-xs text-ink focus:border-brand-600 focus:outline-none"
+                      />
+                      <p className="text-[11px] text-muted mt-1">
+                        Used for logging into this admin panel. Hashed securely with bcrypt.
+                      </p>
                     </div>
 
                     <button
-                      type="button"
-                      onClick={() => toggleItemActive(it)}
-                      disabled={togglingItemId === it.id}
-                      className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all shadow-2xs flex-shrink-0 cursor-pointer ${
-                        it.is_active !== false
-                          ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
-                          : 'border border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700'
+                      type="submit"
+                      className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 transition-colors cursor-pointer"
+                    >
+                      <Save className="h-3.5 w-3.5" />
+                      Save Shop Details
+                    </button>
+                  </form>
+                </div>
+
+                {/* ================= PAYMENT METHODS & GATEWAY CONFIGURATION ================= */}
+                <div className="rounded-2xl border border-line bg-white p-5 shadow-2xs space-y-5">
+                  <div>
+                    <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-brand-600" />
+                      <span>Customer Payment Methods (Checkout Options)</span>
+                    </h3>
+                    <p className="text-xs text-muted mt-0.5">
+                      Control which payment methods are available to your customers during upload checkout.
+                    </p>
+                  </div>
+
+                  {/* 3 Payment Method Toggles */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* 1. Pay at Counter (Cash) */}
+                    <div
+                      className={`flex flex-col justify-between rounded-xl border p-4 transition-all ${
+                        shop.enable_counter_pay !== false
+                          ? 'border-line bg-paper/60'
+                          : 'border-slate-200 bg-slate-50/70 opacity-75'
                       }`}
                     >
-                      {it.is_active !== false ? (
-                        <>
-                          <ToggleRight className="h-3.5 w-3.5 text-emerald-600" />
-                          <span>Turn OFF</span>
-                        </>
-                      ) : (
-                        <>
-                          <ToggleLeft className="h-3.5 w-3.5 text-white" />
-                          <span>Turn ON</span>
-                        </>
-                      )}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 text-xs font-bold">
+                              ₹
+                            </div>
+                            <span className="text-xs font-bold text-ink">Pay at Counter</span>
+                          </div>
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              shop.enable_counter_pay !== false
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-slate-200 text-slate-600'
+                            }`}
+                          >
+                            {shop.enable_counter_pay !== false ? 'Active (ON)' : 'Disabled (OFF)'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted leading-relaxed">
+                          Customer pays cash at your counter when picking up their prints.
+                        </p>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between">
+                        <span className="text-[10px] font-medium text-muted">Cash / Offline</span>
+                        <button
+                          type="button"
+                          onClick={() => togglePaymentMethod('counter')}
+                          disabled={savingGateway}
+                          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all shadow-2xs cursor-pointer ${
+                            shop.enable_counter_pay !== false
+                              ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                              : 'border border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700'
+                          }`}
+                        >
+                          {shop.enable_counter_pay !== false ? (
+                            <>
+                              <ToggleRight className="h-4 w-4 text-emerald-600" />
+                              <span>Turn OFF</span>
+                            </>
+                          ) : (
+                            <>
+                              <ToggleLeft className="h-4 w-4 text-white" />
+                              <span>Turn ON</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 2. UPI Pay (Deeplink) */}
+                    <div
+                      className={`flex flex-col justify-between rounded-xl border p-4 transition-all ${
+                        shop.enable_upi_pay !== false
+                          ? 'border-line bg-paper/60'
+                          : 'border-slate-200 bg-slate-50/70 opacity-75'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-100 text-brand-700 text-xs font-bold">
+                              UPI
+                            </div>
+                            <span className="text-xs font-bold text-ink">UPI Pay</span>
+                          </div>
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              shop.enable_upi_pay !== false
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-slate-200 text-slate-600'
+                            }`}
+                          >
+                            {shop.enable_upi_pay !== false ? 'Active (ON)' : 'Disabled (OFF)'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted leading-relaxed">
+                          Instant 1-tap app intent opening GPay, PhonePe, Paytm, BHIM with dynamic QR.
+                        </p>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between">
+                        <span className="text-[10px] font-medium text-muted">VPA: {shop.upi_vpa || 'Not set'}</span>
+                        <button
+                          type="button"
+                          onClick={() => togglePaymentMethod('upi')}
+                          disabled={savingGateway}
+                          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all shadow-2xs cursor-pointer ${
+                            shop.enable_upi_pay !== false
+                              ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                              : 'border border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700'
+                          }`}
+                        >
+                          {shop.enable_upi_pay !== false ? (
+                            <>
+                              <ToggleRight className="h-4 w-4 text-emerald-600" />
+                              <span>Turn OFF</span>
+                            </>
+                          ) : (
+                            <>
+                              <ToggleLeft className="h-4 w-4 text-white" />
+                              <span>Turn ON</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 3. Online Pay (Cashfree Gateway) */}
+                    <div
+                      className={`flex flex-col justify-between rounded-xl border p-4 transition-all ${
+                        shop.enable_online_pay !== false && shop.payment_gateway_enabled !== false
+                          ? 'border-[#536DFE]/40 bg-[#536DFE]/5'
+                          : 'border-slate-200 bg-slate-50/70 opacity-75'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#536DFE] text-white text-xs font-black">
+                              CF
+                            </div>
+                            <span className="text-xs font-bold text-ink">Online Pay</span>
+                          </div>
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              shop.enable_online_pay !== false && shop.payment_gateway_enabled !== false
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-slate-200 text-slate-600'
+                            }`}
+                          >
+                            {shop.enable_online_pay !== false && shop.payment_gateway_enabled !== false
+                              ? 'Active (ON)'
+                              : 'Disabled (OFF)'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted leading-relaxed">
+                          Cards, NetBanking, Wallets, and verified UPI gateway powered by Cashfree.
+                        </p>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between">
+                        <span className="text-[10px] font-medium text-muted">Cashfree Gateway</span>
+                        <button
+                          type="button"
+                          onClick={() => togglePaymentMethod('online')}
+                          disabled={savingGateway}
+                          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all shadow-2xs cursor-pointer ${
+                            shop.enable_online_pay !== false && shop.payment_gateway_enabled !== false
+                              ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                              : 'border border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700'
+                          }`}
+                        >
+                          {shop.enable_online_pay !== false && shop.payment_gateway_enabled !== false ? (
+                            <>
+                              <ToggleRight className="h-4 w-4 text-emerald-600" />
+                              <span>Turn OFF</span>
+                            </>
+                          ) : (
+                            <>
+                              <ToggleLeft className="h-4 w-4 text-white" />
+                              <span>Turn ON</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cashfree Payment Gateway Credentials Configuration */}
+                  <div className="mt-4 pt-4 border-t border-line space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#536DFE] text-white text-[10px] font-black">
+                          CF
+                        </div>
+                        <span className="text-xs font-bold text-ink">Cashfree API Gateway Credentials</span>
+                      </div>
+                      <span className="text-[10px] font-semibold text-muted bg-paper px-2 py-0.5 rounded border border-line">
+                        Mode: {cashfreeEnv === 'production' ? 'Live / Production' : 'Sandbox / Test'}
+                      </span>
+                    </div>
+
+                    <form onSubmit={handleSaveCashfree} className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-medium text-muted mb-1">
+                            Environment Mode
+                          </label>
+                          <select
+                            value={cashfreeEnv}
+                            onChange={(e) => setCashfreeEnv(e.target.value as any)}
+                            className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-medium text-ink focus:outline-none"
+                          >
+                            <option value="sandbox">Sandbox (Testing / Pre-production)</option>
+                            <option value="production">Production (Real Money / Live)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-medium text-muted mb-1">
+                            Cashfree App ID (Client ID)
+                          </label>
+                          <input
+                            type="text"
+                            value={cashfreeAppId}
+                            onChange={(e) => setCashfreeAppId(e.target.value)}
+                            placeholder="e.g. TEST1038472910..."
+                            className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-mono text-ink placeholder:font-sans focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-[11px] font-medium text-muted">
+                              Cashfree Secret Key
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setShowCashfreeSecret(!showCashfreeSecret)}
+                              className="text-[10px] font-semibold text-muted hover:text-ink"
+                            >
+                              {showCashfreeSecret ? 'Hide' : 'Show'}
+                            </button>
+                          </div>
+                          <input
+                            type={showCashfreeSecret ? 'text' : 'password'}
+                            value={cashfreeSecretKey}
+                            onChange={(e) => setCashfreeSecretKey(e.target.value)}
+                            placeholder="cfsk_ma_test_..."
+                            className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-mono text-ink focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                        <p className="text-[11px] text-muted">
+                          Leave blank to use the system default gateway credentials, or enter your shop&apos;s own Cashfree Merchant API keys.
+                        </p>
+                        <button
+                          type="submit"
+                          disabled={savingCashfree}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 transition-colors flex-shrink-0 cursor-pointer disabled:opacity-50"
+                        >
+                          <Save className="h-3.5 w-3.5" />
+                          <span>{savingCashfree ? 'Saving…' : 'Save Cashfree Credentials'}</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Desktop Agent Setup & Print Services Visibility */}
+              <div className="space-y-6">
+                {/* Desktop Agent Setup & Realtime Pusher Connection */}
+                <div className="rounded-2xl border border-brand-200 bg-brand-50/20 p-5 shadow-2xs space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-brand-100 pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Cpu className="h-5 w-5 text-brand-600 flex-shrink-0" />
+                        <h3 className="text-base font-bold text-ink">Agent setup</h3>
+                      </div>
+                      <p className="mt-1 text-xs text-muted leading-relaxed">
+                        Enter your shop credentials, then choose the printers this workstation should use.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            window.dispatchEvent(new CustomEvent('open-agent-troubleshoot-guide'))
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-semibold text-ink shadow-2xs hover:bg-paper active:scale-95 transition-all cursor-pointer"
+                      >
+                        <HelpCircle className="h-3.5 w-3.5 text-brand-600" />
+                        <span>Troubleshoot Guide</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={copyAllAgentConfig}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-brand-700 transition-colors flex-shrink-0 cursor-pointer"
+                      >
+                        {copiedKey === 'all' ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-white" />
+                            <span>Copied All!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3.5 w-3.5" />
+                            <span>Copy All Agent Config</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 1. Shop credentials */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold text-ink flex items-center gap-1.5 uppercase tracking-wider">
+                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-200 text-[10px] font-bold text-brand-900">
+                        1
+                      </span>
+                      Shop credentials
+                    </h4>
+
+                    <div className="space-y-2.5">
+                      {/* Shop ID */}
+                      <div>
+                        <label className="block text-[11px] font-medium text-muted mb-1">
+                          Shop ID
+                        </label>
+                        <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-2 shadow-2xs">
+                          <span className="flex-1 font-mono text-xs text-ink truncate select-all">
+                            {shop.id}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => copySetting(shop.id, 'shopId')}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-0.5 rounded hover:bg-brand-50"
+                          >
+                            {copiedKey === 'shopId' ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-success-600" />
+                                <span className="text-success-600">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3.5 w-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Access Token */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-medium text-muted">
+                            Access token
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleRegenerateToken}
+                            disabled={regeneratingToken}
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted hover:text-danger-600"
+                            title="Regenerate this token if compromised"
+                          >
+                            <RefreshCw className={`h-2.5 w-2.5 ${regeneratingToken ? 'animate-spin' : ''}`} />
+                            <span>Regenerate</span>
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-2 shadow-2xs">
+                          <span className="flex-1 font-mono text-xs text-ink truncate select-all">
+                            {showAgentToken
+                              ? shop.agent_auth_token || 'demo-agent-auth-token-12345'
+                              : '•'.repeat(32)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowAgentToken(!showAgentToken)}
+                            className="text-muted hover:text-ink p-1 rounded hover:bg-paper"
+                            title={showAgentToken ? 'Hide token' : 'Show token'}
+                          >
+                            {showAgentToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              copySetting(shop.agent_auth_token || 'demo-agent-auth-token-12345', 'token')
+                            }
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-0.5 rounded hover:bg-brand-50"
+                          >
+                            {copiedKey === 'token' ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-success-600" />
+                                <span className="text-success-600">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3.5 w-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Realtime connection (Pusher) */}
+                  <div className="space-y-3 pt-3 border-t border-brand-100">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-ink flex items-center gap-1.5 uppercase tracking-wider">
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-200 text-[10px] font-bold text-brand-900">
+                          2
+                        </span>
+                        Realtime connection
+                      </h4>
+                      <span className="text-[10px] font-semibold text-brand-700 bg-brand-100/60 px-2 py-0.5 rounded-full">
+                        Shop-wise Isolated
+                      </span>
+                    </div>
+
+                    <form onSubmit={handleSavePusher} className="space-y-3">
+                      {/* Pusher app key */}
+                      <div>
+                        <label className="block text-[11px] font-medium text-muted mb-1">
+                          Pusher app key
+                        </label>
+                        <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-1.5 shadow-2xs">
+                          <input
+                            type="text"
+                            value={pusherAppKey}
+                            onChange={(e) => setPusherAppKey(e.target.value)}
+                            placeholder="2e5517c16c8d36b2969d"
+                            className="flex-1 font-mono text-xs text-ink bg-transparent focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => copySetting(pusherAppKey, 'pusherKey')}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-0.5 rounded hover:bg-brand-50"
+                          >
+                            {copiedKey === 'pusherKey' ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-success-600" />
+                                <span className="text-success-600">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3.5 w-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Pusher cluster */}
+                      <div>
+                        <label className="block text-[11px] font-medium text-muted mb-1">
+                          Pusher cluster
+                        </label>
+                        <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-1.5 shadow-2xs">
+                          <input
+                            type="text"
+                            value={pusherCluster}
+                            onChange={(e) => setPusherCluster(e.target.value)}
+                            placeholder="ap2"
+                            className="flex-1 font-mono text-xs text-ink bg-transparent focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => copySetting(pusherCluster, 'cluster')}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-0.5 rounded hover:bg-brand-50"
+                          >
+                            {copiedKey === 'cluster' ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-success-600" />
+                                <span className="text-success-600">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3.5 w-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Auth endpoint URL */}
+                      <div>
+                        <label className="block text-[11px] font-medium text-muted mb-1">
+                          Auth endpoint URL
+                        </label>
+                        <div className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-2 shadow-2xs">
+                          <span className="flex-1 font-mono text-xs text-ink truncate select-all">
+                            {typeof window !== 'undefined' ? window.location.origin : ''}/api/pusher/auth
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              copySetting(
+                                `${typeof window !== 'undefined' ? window.location.origin : ''}/api/pusher/auth`,
+                                'authEndpoint'
+                              )
+                            }
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-0.5 rounded hover:bg-brand-50"
+                          >
+                            {copiedKey === 'authEndpoint' ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-success-600" />
+                                <span className="text-success-600">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3.5 w-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Backend Credentials for Event Signing */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-medium text-muted mb-1">
+                            Pusher App ID (Server Trigger)
+                          </label>
+                          <input
+                            type="text"
+                            value={pusherAppId}
+                            onChange={(e) => setPusherAppId(e.target.value)}
+                            placeholder="e.g. 1827364"
+                            className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-mono text-ink placeholder:font-sans focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-[11px] font-medium text-muted">
+                              Pusher Secret Key
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setShowPusherSecret(!showPusherSecret)}
+                              className="text-[10px] font-semibold text-muted hover:text-ink"
+                            >
+                              {showPusherSecret ? 'Hide' : 'Show'}
+                            </button>
+                          </div>
+                          <input
+                            type={showPusherSecret ? 'text' : 'password'}
+                            value={pusherSecret}
+                            onChange={(e) => setPusherSecret(e.target.value)}
+                            placeholder="Pusher Secret"
+                            className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-mono text-ink focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <p className="text-[11px] text-muted">
+                          Configure your shop&apos;s custom Pusher credentials to isolate customer print events.
+                        </p>
+                        <button
+                          type="submit"
+                          disabled={savingPusher}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-ink px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-ink/80 transition-colors flex-shrink-0 cursor-pointer disabled:opacity-50"
+                        >
+                          <Save className="h-3.5 w-3.5" />
+                          <span>{savingPusher ? 'Saving…' : 'Save Pusher Settings'}</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                {/* ================= PRINT SERVICES VISIBILITY & TOGGLES ================= */}
+                <div className="rounded-2xl border border-line bg-white p-5 shadow-2xs space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+                        <Printer className="h-4 w-4 text-brand-600" />
+                        <span>Print Services Visibility (Turn Services On / Off)</span>
+                      </h3>
+                      <p className="text-xs text-muted mt-0.5">
+                        Instantly hide or show specific print services from the customer upload selection menu.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('pricing')}
+                      className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1"
+                    >
+                      <span>Manage Pricing</span>
+                      <ArrowUpRight className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                ))}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {items.map((it) => (
+                      <div
+                        key={it.id}
+                        className={`flex items-center justify-between rounded-xl border p-3 transition-all ${
+                          it.is_active !== false
+                            ? 'border-line bg-paper/50'
+                            : 'border-slate-200 bg-slate-50 opacity-70'
+                        }`}
+                      >
+                        <div className="min-w-0 pr-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-xs text-ink truncate block">
+                              {it.display_name}
+                            </span>
+                            <span
+                              className={`inline-block h-1.5 w-1.5 rounded-full ${
+                                it.is_active !== false ? 'bg-emerald-500' : 'bg-slate-400'
+                              }`}
+                            />
+                          </div>
+                          <span className="text-[10px] text-muted block">
+                            {it.category} &bull; {formatRupees(it.price_bw)} B&amp;W
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => toggleItemActive(it)}
+                          disabled={togglingItemId === it.id}
+                          className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all shadow-2xs flex-shrink-0 cursor-pointer ${
+                            it.is_active !== false
+                              ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                              : 'border border-emerald-300 bg-emerald-600 text-white hover:bg-emerald-700'
+                          }`}
+                        >
+                          {it.is_active !== false ? (
+                            <>
+                              <ToggleRight className="h-3.5 w-3.5 text-emerald-600" />
+                              <span>Turn OFF</span>
+                            </>
+                          ) : (
+                            <>
+                              <ToggleLeft className="h-3.5 w-3.5 text-white" />
+                              <span>Turn ON</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
