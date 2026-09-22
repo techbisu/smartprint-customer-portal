@@ -71,7 +71,6 @@ export const mockShops: MockShop[] = [
     enable_upi_pay: true,
     enable_online_pay: true,
     cashfree_env: 'sandbox',
-    pin: '1234',
     agent_auth_token: 'demo-agent-auth-token-12345',
     pusher_app_id: process.env.PUSHER_APP_ID || '1827364',
     pusher_key: process.env.PUSHER_KEY || '2e5517c16c8d36b2969d',
@@ -270,7 +269,6 @@ class MockQueryBuilder {
           created_at: r.created_at || new Date().toISOString(),
           is_online: r.is_online !== undefined ? r.is_online : true,
           payment_gateway_enabled: r.payment_gateway_enabled !== undefined ? r.payment_gateway_enabled : true,
-          pin: r.pin || '1234',
         }
         mockShops.push(newShop)
         inserted.push(newShop)

@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 2. Add missing columns to shops table safely
 ALTER TABLE shops ADD COLUMN IF NOT EXISTS password_hash varchar(255);
-ALTER TABLE shops ADD COLUMN IF NOT EXISTS pin varchar(64) DEFAULT '1234';
+ALTER TABLE shops DROP COLUMN IF EXISTS pin;
 ALTER TABLE shops ADD COLUMN IF NOT EXISTS phone varchar(32);
 ALTER TABLE shops ADD COLUMN IF NOT EXISTS address text;
 ALTER TABLE shops ADD COLUMN IF NOT EXISTS pusher_app_id varchar(128);

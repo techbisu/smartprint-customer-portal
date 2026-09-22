@@ -98,7 +98,6 @@ export async function PATCH(
   if (body.address !== undefined) shop.address = String(body.address).trim()
   if (body.password || body.pin) {
     const rawPass = String(body.password || body.pin).trim()
-    shop.pin = rawPass
     const salt = await bcrypt.genSalt(10)
     shop.password_hash = await bcrypt.hash(rawPass, salt)
   }
@@ -140,7 +139,6 @@ export async function PATCH(
     phone: shop.phone,
     address: shop.address,
     password_hash: shop.password_hash,
-    pin: shop.pin,
     pusher_app_id: shop.pusher_app_id,
     pusher_key: shop.pusher_key,
     pusher_secret: shop.pusher_secret,

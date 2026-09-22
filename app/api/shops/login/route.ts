@@ -91,11 +91,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // B. Check exact stored PIN / password
-    if (!isMatch && shop.pin) {
-      isMatch = cleanPin === String(shop.pin).trim()
-    }
-
     // C. Check encoded PIN in agent_auth_token fallback (e.g. token-xxxx#pin:YourPassword)
     if (!isMatch && shop.agent_auth_token) {
       const pinPartMatch = String(shop.agent_auth_token).match(/#pin:(.+)$/)

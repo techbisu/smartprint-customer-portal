@@ -73,7 +73,6 @@ export async function POST(req: NextRequest) {
       is_online: true,
       agent_auth_token: agentTokenWithFallback,
       password_hash: passwordHash,
-      pin: rawPassword,
       pusher_app_id: pusherAppId?.trim() || process.env.PUSHER_APP_ID || '',
       pusher_key: pusherKey?.trim() || process.env.PUSHER_KEY || '2e5517c16c8d36b2969d',
       pusher_secret: pusherSecret?.trim() || process.env.PUSHER_SECRET || '',

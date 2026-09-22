@@ -15,7 +15,6 @@ create table if not exists shops (
     -- into that shop's agent Settings tab as "Auth Token".
     agent_auth_token varchar(128) unique not null,
     password_hash varchar(255),
-    pin varchar(64) default '1234',
     phone varchar(32),
     address text,
     pusher_app_id varchar(128),

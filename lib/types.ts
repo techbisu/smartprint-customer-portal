@@ -11,7 +11,6 @@ export interface Shop {
   cashfree_app_id?: string
   cashfree_secret_key?: string
   cashfree_env?: 'sandbox' | 'production'
-  pin?: string
   password_hash?: string
   phone?: string
   address?: string
