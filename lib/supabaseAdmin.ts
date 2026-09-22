@@ -265,7 +265,7 @@ class MockQueryBuilder {
         const newShop: MockShop = {
           ...r,
           id: r.id || crypto.randomUUID(),
-          agent_auth_token: r.agent_auth_token || `token-${crypto.randomUUID().slice(0, 16)}`,
+          agent_auth_token: r.agent_auth_token || crypto.randomUUID(),
           created_at: r.created_at || new Date().toISOString(),
           is_online: r.is_online !== undefined ? r.is_online : true,
           payment_gateway_enabled: r.payment_gateway_enabled !== undefined ? r.payment_gateway_enabled : true,

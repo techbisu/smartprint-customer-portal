@@ -91,14 +91,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // C. Check encoded PIN in agent_auth_token fallback (e.g. token-xxxx#pin:YourPassword)
-    if (!isMatch && shop.agent_auth_token) {
-      const pinPartMatch = String(shop.agent_auth_token).match(/#pin:(.+)$/)
-      if (pinPartMatch && pinPartMatch[1]) {
-        isMatch = cleanPin === pinPartMatch[1].trim()
-      }
-    }
-
     if (!isMatch) {
       return NextResponse.json(
         { error: 'Incorrect shop access password or PIN.' },

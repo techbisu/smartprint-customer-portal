@@ -59,9 +59,7 @@ export async function POST(req: NextRequest) {
     const salt = await bcrypt.genSalt(10)
     const passwordHash = await bcrypt.hash(rawPassword, salt)
 
-    // Token with PIN fallback encoded so login works even before migration columns are added
-    const baseToken = `token-${crypto.randomUUID().slice(0, 18)}`
-    const agentTokenWithFallback = `${baseToken}#pin:${rawPassword}`
+    const agentToken = crypto.randomUUID()
 
     const fullShopPayload = {
       id: shopId,
@@ -71,7 +69,7 @@ export async function POST(req: NextRequest) {
       phone: phone?.trim() || '',
       address: address?.trim() || '',
       is_online: true,
-      agent_auth_token: agentTokenWithFallback,
+      agent_auth_token: agentToken,
       password_hash: passwordHash,
       pusher_app_id: pusherAppId?.trim() || process.env.PUSHER_APP_ID || '',
       pusher_key: pusherKey?.trim() || process.env.PUSHER_KEY || '2e5517c16c8d36b2969d',
@@ -98,7 +96,7 @@ export async function POST(req: NextRequest) {
         shop_name: shopName.trim(),
         upi_vpa: upiVpa.trim(),
         is_online: true,
-        agent_auth_token: agentTokenWithFallback,
+        agent_auth_token: agentToken,
         created_at: new Date().toISOString(),
       }
       const retryResult = await supabaseAdmin

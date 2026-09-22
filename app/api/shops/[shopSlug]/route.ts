@@ -114,7 +114,7 @@ export async function PATCH(
   if (body.trial_ends_at !== undefined) shop.trial_ends_at = body.trial_ends_at
 
   if (body.regenerate_token) {
-    shop.agent_auth_token = `token-${crypto.randomUUID().slice(0, 18)}`
+    shop.agent_auth_token = crypto.randomUUID()
   }
 
   // Update mock in-memory if present
