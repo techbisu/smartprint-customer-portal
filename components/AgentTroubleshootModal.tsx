@@ -20,8 +20,13 @@ import {
   Play,
   Flame,
   Globe,
+  Download,
 } from 'lucide-react'
 import { Shop } from '@/lib/types'
+
+const AGENT_DOWNLOAD_PATH =
+  process.env.NEXT_PUBLIC_DESKTOP_AGENT_DOWNLOAD_URL || '/downloads/SmartPrint-Agent-Setup.exe'
+
 
 interface AgentTroubleshootModalProps {
   isOpen: boolean
@@ -258,20 +263,34 @@ export default function AgentTroubleshootModal({
               Follow These Steps to Fix Offline Status
             </h3>
 
-            {/* Step 1: Check Application Running */}
-            <div className="rounded-xl border border-line p-4 space-y-2 bg-white">
+            {/* Step 1: Check Application Running & Download */}
+            <div className="rounded-xl border border-line p-4 space-y-3 bg-white">
               <div className="flex items-start gap-3">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-50 text-brand-700 font-bold text-xs flex-shrink-0 mt-0.5">
                   1
                 </div>
-                <div className="space-y-1 flex-1">
-                  <h4 className="font-bold text-ink text-sm">Ensure the Desktop Agent App is Running</h4>
-                  <p className="text-xs text-muted leading-relaxed">
-                    The SmartPrint Desktop Agent is a lightweight background service installed on your counter Windows PC.
-                    Look for the <strong>printer icon</strong> in your Windows Taskbar tray (bottom right corner).
-                  </p>
+                <div className="space-y-2 flex-1">
+                  <div>
+                    <h4 className="font-bold text-ink text-sm">Install & Run the Desktop Agent</h4>
+                    <p className="text-xs text-muted leading-relaxed mt-0.5">
+                      The SmartPrint Desktop Agent is a lightweight background service running in your Windows Taskbar tray.
+                      If not yet installed on this PC, download and run the setup below.
+                    </p>
+                  </div>
+
+                  <div className="pt-1">
+                    <a
+                      href={AGENT_DOWNLOAD_PATH}
+                      download="SmartPrint-Agent-Setup.exe"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white px-3.5 py-2 text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span>Download Desktop Agent (.exe)</span>
+                    </a>
+                  </div>
+
                   <div className="mt-2 rounded-lg bg-paper p-2.5 text-xs text-muted font-mono flex items-center justify-between">
-                    <span>Target: SmartPrint Desktop Agent v1.2+</span>
+                    <span>Target: SmartPrint Desktop Agent (Windows x64)</span>
                     <span className="text-[11px] bg-white px-2 py-0.5 rounded border border-line">Tray Service</span>
                   </div>
                 </div>
@@ -455,23 +474,34 @@ export default function AgentTroubleshootModal({
 
         {/* Modal Footer (Sticky, cannot shrink) */}
         <div className="flex-shrink-0 flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-3.5 border-t border-line bg-surface/90">
-          <button
-            type="button"
-            onClick={copyAllConfig}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100/80 px-3 py-1.5 rounded-xl border border-brand-200 transition-colors cursor-pointer"
-          >
-            {copiedField === 'all_config' ? (
-              <>
-                <Check className="h-3.5 w-3.5 text-success-600" />
-                <span className="text-success-700">Copied Full Config (.env)!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="h-3.5 w-3.5 text-brand-600" />
-                <span>Copy Full Agent Config</span>
-              </>
-            )}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href={AGENT_DOWNLOAD_PATH}
+              download="SmartPrint-Agent-Setup.exe"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink hover:text-brand-700 bg-white hover:bg-paper px-3 py-1.5 rounded-xl border border-line shadow-2xs transition-colors cursor-pointer"
+            >
+              <Download className="h-3.5 w-3.5 text-brand-600" />
+              <span>Download .exe</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={copyAllConfig}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100/80 px-3 py-1.5 rounded-xl border border-brand-200 transition-colors cursor-pointer"
+            >
+              {copiedField === 'all_config' ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-success-600" />
+                  <span className="text-success-700">Copied Full Config (.env)!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5 text-brand-600" />
+                  <span>Copy Full Agent Config</span>
+                </>
+              )}
+            </button>
+          </div>
 
           <button
             type="button"

@@ -30,6 +30,9 @@ create table if not exists shops (
     cashfree_secret_key varchar(255),
     cashfree_env varchar(32) default 'sandbox',
     default_language varchar(10) default 'en',
+    plan_type varchar(32) default 'trial',
+    subscription_status varchar(32) default 'trialing',
+    trial_ends_at timestamp with time zone default (now() + interval '15 days'),
     created_at timestamp with time zone default now()
 );
 
@@ -66,6 +69,22 @@ create table if not exists print_jobs (
     created_at timestamp with time zone default now()
 );
 
+-- 4. Shop banners -------------------------------------------------------------
+create table if not exists shop_banners (
+    id varchar(64) primary key,
+    shop_id uuid references shops(id) on delete cascade,
+    title varchar(255) not null,
+    subtitle text,
+    badge varchar(50),
+    badge_color varchar(20) default 'marigold',
+    bg_gradient text default 'from-[#2C3A6B] via-[#212C52] to-[#16181D]',
+    image_url text,
+    link_url text,
+    is_active boolean default true,
+    sort_order int default 1,
+    created_at timestamp with time zone default now()
+);
+
 -- Row Level Security ----------------------------------------------------------
 -- The customer portal's browser code uses the ANON key for two things only:
 -- reading active rate-card rows, and uploading files to Storage. Everything
@@ -77,6 +96,12 @@ create table if not exists print_jobs (
 alter table shops enable row level security;
 alter table shop_rate_card enable row level security;
 alter table print_jobs enable row level security;
+alter table shop_banners enable row level security;
+
+-- Anyone can read active banners
+create policy "Public can read active banners"
+    on shop_banners for select
+    using (is_active = true);
 
 -- Anyone can read basic shop info (needed to render the page header).
 create policy "Public can read shops"

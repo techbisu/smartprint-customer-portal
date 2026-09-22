@@ -323,6 +323,9 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
           body: JSON.stringify({ id: editingItem.id, ...payload }),
         })
         const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to update pricing')
+        }
         if (data.item) {
           setItems(items.map((i) => (i.id === editingItem.id ? data.item : i)))
           showToast('Pricing updated successfully')
@@ -334,6 +337,9 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
           body: JSON.stringify(payload),
         })
         const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to add service')
+        }
         if (data.item) {
           setItems([...items, data.item])
           showToast('New service added')
@@ -341,8 +347,8 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
       }
       setShowItemModal(false)
       setEditingItem(null)
-    } catch {
-      showToast('Error saving item')
+    } catch (err: any) {
+      showToast(err?.message || 'Error saving item')
     }
   }
 
@@ -350,12 +356,14 @@ export default function ShopAdminPanel({ initialShop, initialItems, initialBanne
     if (!confirm('Are you sure you want to delete this service?')) return
     try {
       const res = await fetch(`/api/shops/${shop.slug}/pricing?id=${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        setItems(items.filter((i) => i.id !== id))
-        showToast('Service deleted')
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete service')
       }
-    } catch {
-      showToast('Failed to delete service')
+      setItems(items.filter((i) => i.id !== id))
+      showToast('Service deleted')
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to delete service')
     }
   }
 

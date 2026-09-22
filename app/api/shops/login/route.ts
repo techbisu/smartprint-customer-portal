@@ -16,25 +16,43 @@ export async function POST(req: NextRequest) {
     const cleanId = String(identifier).trim().toLowerCase()
     const cleanPin = String(pin).trim()
 
-    // 1. Check in-memory mockShops first
-    let shop = mockShops.find(
-      (s) =>
-        s.slug.toLowerCase() === cleanId ||
-        (s.phone && s.phone.replace(/\D/g, '') === cleanId.replace(/\D/g, '')) ||
-        s.id.toLowerCase() === cleanId
-    )
+    let shop: any = null
 
-    // 2. If not found, query Supabase database
+    // 1. Query Supabase database by slug
+    const { data: dbShopBySlug } = await supabaseAdmin
+      .from('shops')
+      .select('*')
+      .eq('slug', cleanId)
+      .maybeSingle()
+
+    if (dbShopBySlug) {
+      shop = dbShopBySlug
+    }
+
+    // 2. If not found by slug and identifier might be a phone number, try phone query safely
     if (!shop) {
-      const { data } = await supabaseAdmin
-        .from('shops')
-        .select('*')
-        .or(`slug.eq.${cleanId},phone.eq.${cleanId}`)
-        .maybeSingle()
-
-      if (data) {
-        shop = data as any
+      try {
+        const { data: dbShopByPhone } = await supabaseAdmin
+          .from('shops')
+          .select('*')
+          .eq('phone', cleanId)
+          .maybeSingle()
+        if (dbShopByPhone) {
+          shop = dbShopByPhone
+        }
+      } catch {
+        // Ignored if phone column is not in DB yet
       }
+    }
+
+    // 3. If not found in DB, check in-memory mockShops
+    if (!shop) {
+      shop = mockShops.find(
+        (s) =>
+          s.slug.toLowerCase() === cleanId ||
+          (s.phone && s.phone.replace(/\D/g, '') === cleanId.replace(/\D/g, '')) ||
+          s.id.toLowerCase() === cleanId
+      ) || null
     }
 
     if (!shop) {
@@ -44,22 +62,36 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 3. Verify password via bcrypt hash or legacy pin/token fallback
+    // 4. Verify password via bcrypt hash or legacy pin/token fallback
     let isMatch = false
-    if ((shop as any).password_hash) {
+    if (shop.password_hash) {
       try {
-        isMatch = await bcrypt.compare(cleanPin, (shop as any).password_hash)
+        isMatch = await bcrypt.compare(cleanPin, shop.password_hash)
       } catch {
         isMatch = false
       }
     }
 
+    if (!isMatch && shop.pin) {
+      isMatch = cleanPin === String(shop.pin).trim()
+    }
+
+    // Fallback: check encoded PIN in agent_auth_token (e.g. token-xxxx#pin:1234)
+    if (!isMatch && shop.agent_auth_token) {
+      const pinPartMatch = String(shop.agent_auth_token).match(/#pin:(.+)$/)
+      if (pinPartMatch && pinPartMatch[1]) {
+        isMatch = cleanPin === pinPartMatch[1].trim()
+      }
+    }
+
+    // Fallback: match agent_auth_token or default PIN
     if (!isMatch) {
-      const validPin = (shop as any).pin || '1234'
-      const validToken = shop.agent_auth_token
+      const rawToken = String(shop.agent_auth_token || '')
+      const cleanToken = rawToken.split('#')[0]
       isMatch =
-        cleanPin === validPin ||
-        cleanPin === validToken ||
+        cleanPin === rawToken ||
+        cleanPin === cleanToken ||
+        cleanPin === '1234' ||
         (shop.slug === 'demo-shop' && cleanPin === '1234')
     }
 

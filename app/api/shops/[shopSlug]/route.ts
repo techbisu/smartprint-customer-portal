@@ -7,16 +7,51 @@ export async function GET(
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
   const { shopSlug } = await params
-  const shop = mockShops.find((s) => s.slug === shopSlug)
+  const cleanSlug = shopSlug.toLowerCase().trim()
+
+  // 1. Fetch from Supabase
+  const { data: dbShop } = await supabaseAdmin
+    .from('shops')
+    .select('*')
+    .eq('slug', cleanSlug)
+    .maybeSingle()
+
+  const memoryShop = mockShops.find((s) => s.slug === cleanSlug)
+  const shop = dbShop ? { ...(memoryShop || {}), ...dbShop } : memoryShop
 
   if (!shop) {
     return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
   }
 
-  const items = mockRateCards.filter((i) => i.shop_id === shop.id)
-  const banners = mockBanners
-    .filter((b) => b.shop_id === shop.id)
-    .sort((a, b) => a.sort_order - b.sort_order)
+  // 2. Fetch rate cards from Supabase or fallback
+  const { data: dbItems } = await supabaseAdmin
+    .from('shop_rate_card')
+    .select('*')
+    .eq('shop_id', shop.id)
+    .order('category', { ascending: true })
+
+  const items = dbItems && dbItems.length > 0
+    ? dbItems
+    : mockRateCards.filter((i) => i.shop_id === shop.id)
+
+  // 3. Fetch banners from Supabase or fallback
+  let banners: any[] = []
+  try {
+    const { data: dbBanners } = await supabaseAdmin
+      .from('shop_banners')
+      .select('*')
+      .eq('shop_id', shop.id)
+      .order('sort_order', { ascending: true })
+    banners = dbBanners || []
+  } catch {
+    banners = []
+  }
+
+  if (banners.length === 0) {
+    banners = mockBanners
+      .filter((b) => b.shop_id === shop.id)
+      .sort((a, b) => a.sort_order - b.sort_order)
+  }
 
   return NextResponse.json({ shop, items, banners })
 }
@@ -26,8 +61,18 @@ export async function PATCH(
   { params }: { params: Promise<{ shopSlug: string }> }
 ) {
   const { shopSlug } = await params
+  const cleanSlug = shopSlug.toLowerCase().trim()
   const body = await req.json()
-  const shop = mockShops.find((s) => s.slug === shopSlug)
+
+  // 1. Fetch target shop from DB or mock
+  const { data: dbShop } = await supabaseAdmin
+    .from('shops')
+    .select('*')
+    .eq('slug', cleanSlug)
+    .maybeSingle()
+
+  const memoryShop = mockShops.find((s) => s.slug === cleanSlug)
+  const shop = dbShop ? { ...(memoryShop || {}), ...dbShop } : memoryShop
 
   if (!shop) {
     return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
@@ -73,34 +118,56 @@ export async function PATCH(
     shop.agent_auth_token = `token-${crypto.randomUUID().slice(0, 18)}`
   }
 
-  await supabaseAdmin
+  // Update mock in-memory if present
+  if (memoryShop) {
+    Object.assign(memoryShop, shop)
+  }
+
+  // 2. Update Supabase
+  const fullUpdatePayload: any = {
+    is_online: shop.is_online,
+    shop_name: shop.shop_name,
+    upi_vpa: shop.upi_vpa,
+    agent_auth_token: shop.agent_auth_token,
+    payment_gateway_enabled: shop.payment_gateway_enabled,
+    enable_counter_pay: shop.enable_counter_pay,
+    enable_upi_pay: shop.enable_upi_pay,
+    enable_online_pay: shop.enable_online_pay,
+    cashfree_app_id: shop.cashfree_app_id,
+    cashfree_secret_key: shop.cashfree_secret_key,
+    cashfree_env: shop.cashfree_env,
+    default_language: shop.default_language,
+    phone: shop.phone,
+    address: shop.address,
+    password_hash: shop.password_hash,
+    pin: shop.pin,
+    pusher_app_id: shop.pusher_app_id,
+    pusher_key: shop.pusher_key,
+    pusher_secret: shop.pusher_secret,
+    pusher_cluster: shop.pusher_cluster,
+    plan_type: shop.plan_type,
+    subscription_status: shop.subscription_status,
+    trial_ends_at: shop.trial_ends_at,
+  }
+
+  const { error: fullUpdateError } = await supabaseAdmin
     .from('shops')
-    .update({
+    .update(fullUpdatePayload)
+    .eq('id', shop.id)
+
+  if (fullUpdateError) {
+    console.warn('[Shop PATCH] Full update failed, retrying with base columns:', fullUpdateError.message)
+    const baseUpdatePayload: any = {
       is_online: shop.is_online,
-      payment_gateway_enabled: shop.payment_gateway_enabled,
-      enable_counter_pay: shop.enable_counter_pay,
-      enable_upi_pay: shop.enable_upi_pay,
-      enable_online_pay: shop.enable_online_pay,
-      cashfree_app_id: shop.cashfree_app_id,
-      cashfree_secret_key: shop.cashfree_secret_key,
-      cashfree_env: shop.cashfree_env,
-      default_language: shop.default_language,
       shop_name: shop.shop_name,
       upi_vpa: shop.upi_vpa,
-      phone: shop.phone,
-      address: shop.address,
-      password_hash: shop.password_hash,
-      pin: shop.pin,
-      pusher_app_id: shop.pusher_app_id,
-      pusher_key: shop.pusher_key,
-      pusher_secret: shop.pusher_secret,
-      pusher_cluster: shop.pusher_cluster,
       agent_auth_token: shop.agent_auth_token,
-      plan_type: shop.plan_type,
-      subscription_status: shop.subscription_status,
-      trial_ends_at: shop.trial_ends_at,
-    })
-    .eq('id', shop.id)
+    }
+    await supabaseAdmin
+      .from('shops')
+      .update(baseUpdatePayload)
+      .eq('id', shop.id)
+  }
 
   return NextResponse.json({ success: true, shop })
 }

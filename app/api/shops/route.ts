@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       .replace(/[^a-z0-9-]/g, '-')
       .replace(/-+/g, '-')
 
-    // Check if slug already exists
+    // 1. Check if slug already exists in memory or in database
     const existing = mockShops.find((s) => s.slug === cleanSlug)
     if (existing) {
       return NextResponse.json(
@@ -41,15 +41,29 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const shopId = crypto.randomUUID()
-    const agentToken = `token-${crypto.randomUUID().slice(0, 18)}`
+    const { data: existingDbShop } = await supabaseAdmin
+      .from('shops')
+      .select('id, slug')
+      .eq('slug', cleanSlug)
+      .maybeSingle()
 
-    // Hash password with bcrypt
+    if (existingDbShop) {
+      return NextResponse.json(
+        { error: 'This shop URL slug is already taken in the database. Please pick another one.' },
+        { status: 409 }
+      )
+    }
+
+    const shopId = crypto.randomUUID()
     const rawPassword = password ? String(password).trim() : '1234'
     const salt = await bcrypt.genSalt(10)
     const passwordHash = await bcrypt.hash(rawPassword, salt)
 
-    const newShop = {
+    // Token with PIN fallback encoded so login works even before migration columns are added
+    const baseToken = `token-${crypto.randomUUID().slice(0, 18)}`
+    const agentTokenWithFallback = `${baseToken}#pin:${rawPassword}`
+
+    const fullShopPayload = {
       id: shopId,
       slug: cleanSlug,
       shop_name: shopName.trim(),
@@ -57,7 +71,7 @@ export async function POST(req: NextRequest) {
       phone: phone?.trim() || '',
       address: address?.trim() || '',
       is_online: true,
-      agent_auth_token: agentToken,
+      agent_auth_token: agentTokenWithFallback,
       password_hash: passwordHash,
       pin: rawPassword,
       pusher_app_id: pusherAppId?.trim() || process.env.PUSHER_APP_ID || '',
@@ -70,16 +84,58 @@ export async function POST(req: NextRequest) {
       trial_ends_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
     }
 
-    mockShops.push(newShop as any)
-    await supabaseAdmin.from('shops').insert(newShop)
+    // 2. Insert into Supabase with graceful fallback to base columns if migration has not been applied yet
+    let { data: insertedShop, error: insertError } = await supabaseAdmin
+      .from('shops')
+      .insert(fullShopPayload)
+      .select()
+      .maybeSingle()
 
-    // Create default rate cards for the shop
+    if (insertError) {
+      console.warn('[Register Shop] Full columns insert failed, falling back to base columns:', insertError.message)
+      const baseShopPayload = {
+        id: shopId,
+        slug: cleanSlug,
+        shop_name: shopName.trim(),
+        upi_vpa: upiVpa.trim(),
+        is_online: true,
+        agent_auth_token: agentTokenWithFallback,
+        created_at: new Date().toISOString(),
+      }
+      const retryResult = await supabaseAdmin
+        .from('shops')
+        .insert(baseShopPayload)
+        .select()
+        .maybeSingle()
+
+      if (retryResult.error) {
+        console.error('[Register Shop] Base insert also failed:', retryResult.error)
+        return NextResponse.json(
+          { error: `Database error: ${retryResult.error.message}` },
+          { status: 500 }
+        )
+      }
+      insertedShop = retryResult.data || baseShopPayload
+    }
+
+    const inMemoryShop = { ...fullShopPayload, ...(insertedShop || {}) }
+    mockShops.push(inMemoryShop as any)
+
+    // 3. Create default rate cards for the shop in the database
     const defaultCards = initialPricing && initialPricing.length > 0
       ? initialPricing.map((item: any) => ({
-          ...item,
           id: crypto.randomUUID(),
           shop_id: shopId,
-          is_active: item.is_active !== undefined ? item.is_active : true,
+          category: item.category ? String(item.category).trim() : 'Standard Print',
+          service_code: item.service_code
+            ? String(item.service_code).trim().toLowerCase().replace(/[^a-z0-9_]/g, '_')
+            : String(item.display_name || 'service').trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+          display_name: String(item.display_name).trim(),
+          pricing_model: item.pricing_model || 'per_page',
+          price_bw: Number(item.price_bw) || 2.0,
+          price_color: item.price_color !== null && item.price_color !== undefined && item.price_color !== '' ? Number(item.price_color) : null,
+          supports_duplex: Boolean(item.supports_duplex),
+          is_active: item.is_active !== undefined ? Boolean(item.is_active) : true,
         }))
       : [
           {
@@ -121,10 +177,14 @@ export async function POST(req: NextRequest) {
         ]
 
     for (const card of defaultCards) {
-      await supabaseAdmin.from('shop_rate_card').insert(card)
+      const { error: cardErr } = await supabaseAdmin.from('shop_rate_card').insert(card)
+      if (cardErr) {
+        console.warn(`[Register Shop] Rate card insert error for ${card.service_code}:`, cardErr.message)
+      }
+      mockRateCards.push(card)
     }
 
-    // Default welcome banner
+    // 4. Default welcome banner
     const welcomeBanner = {
       id: `banner-${crypto.randomUUID().slice(0, 8)}`,
       shop_id: shopId,
@@ -136,11 +196,15 @@ export async function POST(req: NextRequest) {
       is_active: true,
       sort_order: 1,
     }
-    await supabaseAdmin.from('shop_banners').insert(welcomeBanner)
+    const { error: bannerErr } = await supabaseAdmin.from('shop_banners').insert(welcomeBanner)
+    if (bannerErr) {
+      console.warn('[Register Shop] Banner insert skipped/failed (table may not exist yet):', bannerErr.message)
+    }
+    mockBanners.push(welcomeBanner as any)
 
     return NextResponse.json({
       success: true,
-      shop: newShop,
+      shop: inMemoryShop,
       customerUrl: `/print/${cleanSlug}`,
       adminUrl: `/dashboard/${cleanSlug}`,
     })
