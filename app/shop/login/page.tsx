@@ -31,11 +31,11 @@ export default function ShopLoginPage() {
     setError(null)
 
     if (!identifier.trim()) {
-      setError('Please enter your Shop Handle (e.g. demo-shop) or registered Phone.')
+      setError('Please enter your Shop Slug or registered Phone.')
       return
     }
     if (!pin.trim()) {
-      setError('Please enter your 4-digit access PIN.')
+      setError('Please enter your shop password or PIN.')
       return
     }
 
@@ -65,12 +65,6 @@ export default function ShopLoginPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const fillDemo = () => {
-    setIdentifier('demo-shop')
-    setPin('1234')
-    setError(null)
   }
 
   return (
@@ -111,22 +105,21 @@ export default function ShopLoginPage() {
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. demo-shop or 9876543210"
+                  placeholder="e.g. your-shop-name or 9876543210"
                   className="w-full rounded-xl border border-line bg-paper pl-10 pr-3.5 py-2.5 text-sm text-ink placeholder:text-muted focus:border-brand-600 focus:bg-white focus:outline-none transition-colors"
                   required
                 />
               </div>
               <p className="mt-1 text-[11px] text-muted">
-                The unique slug from your customer URL or phone number
+                The unique slug from your customer URL or registered mobile number
               </p>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-bold uppercase tracking-wider text-ink">
-                  Shop Access PIN / Password
+                  Shop Access Password / PIN
                 </label>
-                <span className="text-[10px] text-muted">Default: 1234</span>
               </div>
               <div className="relative">
                 <KeyRound className="absolute left-3.5 top-3 h-4 w-4 text-muted pointer-events-none" />
@@ -134,9 +127,9 @@ export default function ShopLoginPage() {
                   type="password"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  placeholder="••••"
-                  maxLength={32}
-                  className="w-full rounded-xl border border-line bg-paper pl-10 pr-3.5 py-2.5 text-sm text-ink tracking-widest placeholder:text-muted focus:border-brand-600 focus:bg-white focus:outline-none transition-colors"
+                  placeholder="Enter your password or PIN"
+                  maxLength={64}
+                  className="w-full rounded-xl border border-line bg-paper pl-10 pr-3.5 py-2.5 text-sm text-ink placeholder:text-muted focus:border-brand-600 focus:bg-white focus:outline-none transition-colors"
                   required
                 />
               </div>
@@ -161,41 +154,12 @@ export default function ShopLoginPage() {
             </button>
           </form>
 
-          {/* Demo Autofill Helper */}
-          <div className="mt-6 pt-5 border-t border-line/70">
-            <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-3.5 flex items-center justify-between gap-3">
-              <div className="text-left">
-                <p className="text-xs font-bold text-brand-900 flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-brand-600" />
-                  Demo Shopkeeper Account
-                </p>
-                <p className="text-[11px] text-brand-700/90 mt-0.5 font-mono">
-                  Slug: <strong>demo-shop</strong> &middot; PIN: <strong>1234</strong>
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={fillDemo}
-                className="flex-shrink-0 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 transition-colors cursor-pointer"
-              >
-                Autofill
-              </button>
-            </div>
-          </div>
-
           <div className="mt-6 flex flex-col gap-2.5 text-center text-xs">
             <Link
               href="/register"
               className="font-medium text-brand-700 hover:text-brand-800 transition-colors"
             >
               New shop owner? <span className="font-bold underline">Register your Xerox / Print Shop</span>
-            </Link>
-
-            <Link
-              href="/print/demo-shop"
-              className="text-muted hover:text-ink transition-colors"
-            >
-              &larr; Back to Customer Print Portal
             </Link>
           </div>
         </div>

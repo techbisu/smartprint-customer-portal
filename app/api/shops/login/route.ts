@@ -29,23 +29,40 @@ export async function POST(req: NextRequest) {
       shop = dbShopBySlug
     }
 
-    // 2. If not found by slug and identifier might be a phone number, try phone query safely
+    // 2. If not found by slug, try searching by phone number (including formatted phone)
     if (!shop) {
       try {
+        const cleanDigits = cleanId.replace(/\D/g, '')
+
+        // Exact match on phone
         const { data: dbShopByPhone } = await supabaseAdmin
           .from('shops')
           .select('*')
           .eq('phone', cleanId)
           .maybeSingle()
+
         if (dbShopByPhone) {
           shop = dbShopByPhone
+        } else if (cleanDigits.length >= 7) {
+          // Check for phone number formatted differently in DB
+          const { data: allShops } = await supabaseAdmin
+            .from('shops')
+            .select('*')
+            .not('phone', 'is', null)
+
+          if (allShops && allShops.length > 0) {
+            shop = allShops.find((s: any) => {
+              const sDigits = String(s.phone || '').replace(/\D/g, '')
+              return sDigits.length >= 7 && (sDigits.endsWith(cleanDigits) || cleanDigits.endsWith(sDigits))
+            }) || null
+          }
         }
       } catch {
         // Ignored if phone column is not in DB yet
       }
     }
 
-    // 3. If not found in DB, check in-memory mockShops
+    // 3. If not found in DB, check in-memory mockShops (for non-database shops)
     if (!shop) {
       shop = mockShops.find(
         (s) =>
@@ -62,8 +79,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 4. Verify password via bcrypt hash or legacy pin/token fallback
+    // 4. Verify password strictly against real database credentials
     let isMatch = false
+
+    // A. Check bcrypt password hash
     if (shop.password_hash) {
       try {
         isMatch = await bcrypt.compare(cleanPin, shop.password_hash)
@@ -72,27 +91,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // B. Check exact stored PIN / password
     if (!isMatch && shop.pin) {
       isMatch = cleanPin === String(shop.pin).trim()
     }
 
-    // Fallback: check encoded PIN in agent_auth_token (e.g. token-xxxx#pin:1234)
+    // C. Check encoded PIN in agent_auth_token fallback (e.g. token-xxxx#pin:YourPassword)
     if (!isMatch && shop.agent_auth_token) {
       const pinPartMatch = String(shop.agent_auth_token).match(/#pin:(.+)$/)
       if (pinPartMatch && pinPartMatch[1]) {
         isMatch = cleanPin === pinPartMatch[1].trim()
       }
-    }
-
-    // Fallback: match agent_auth_token or default PIN
-    if (!isMatch) {
-      const rawToken = String(shop.agent_auth_token || '')
-      const cleanToken = rawToken.split('#')[0]
-      isMatch =
-        cleanPin === rawToken ||
-        cleanPin === cleanToken ||
-        cleanPin === '1234' ||
-        (shop.slug === 'demo-shop' && cleanPin === '1234')
     }
 
     if (!isMatch) {

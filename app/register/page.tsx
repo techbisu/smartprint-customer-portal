@@ -784,10 +784,10 @@ export default function ShopRegistrationPage() {
 
         <div className="mt-5 pt-4 border-t border-line text-center">
           <Link
-            href="/dashboard/demo-shop"
+            href="/shop/login"
             className="text-xs font-semibold text-brand-600 hover:text-brand-700 underline underline-offset-2"
           >
-            Already have a shop? Open Demo Shop Admin Panel &rarr;
+            Already have a shop? Sign in to Shop Panel &rarr;
           </Link>
         </div>
       </div>
