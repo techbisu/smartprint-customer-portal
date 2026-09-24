@@ -40,10 +40,33 @@ export default function AutoCropper({ file, onComplete, onCancel }: AutoCropperP
 
   // Effect to check if OpenCV is already loaded
   useEffect(() => {
-    if (checkOpenCV() && status === 'loading_cv') {
-      startProcessing()
+    if (status !== 'loading_cv') return;
+
+    if (checkOpenCV()) {
+      startProcessing();
+      return;
     }
-  }, [file])
+
+    const intervalId = setInterval(() => {
+      if (checkOpenCV()) {
+        clearInterval(intervalId);
+        startProcessing();
+      }
+    }, 500);
+
+    const timeoutId = setTimeout(() => {
+      clearInterval(intervalId);
+      if (!checkOpenCV()) {
+        setErrorMsg('Scanner engine failed to load. Please check your connection.');
+        setStatus('error');
+      }
+    }, 15000);
+
+    return () => {
+      clearInterval(intervalId);
+      clearTimeout(timeoutId);
+    };
+  }, [status, file]);
 
   const handleConfirm = () => {
     if (processedFile && previewUrl) {
@@ -52,12 +75,13 @@ export default function AutoCropper({ file, onComplete, onCancel }: AutoCropperP
   }
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-white/50 backdrop-blur-md rounded-2xl border shadow-sm mt-4 min-h-[400px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="w-full max-w-md flex flex-col items-center justify-center p-6 bg-white rounded-2xl border shadow-xl min-h-[400px] relative">
       <Script 
         src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0/build/opencv.js" 
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         onLoad={() => {
-          if (status === 'loading_cv') {
+          if (status === 'loading_cv' && checkOpenCV()) {
             startProcessing()
           }
         }}
@@ -125,6 +149,7 @@ export default function AutoCropper({ file, onComplete, onCancel }: AutoCropperP
           </button>
         </div>
       )}
+      </div>
     </div>
   )
 }
