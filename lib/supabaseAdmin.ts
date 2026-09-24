@@ -26,7 +26,9 @@ export function isConfiguredSupabase(url?: string, key?: string): boolean {
 let realClient: SupabaseClient | null = null
 if (isConfiguredSupabase(supabaseUrl, serviceRoleKey)) {
   try {
-    realClient = createClient(supabaseUrl!, serviceRoleKey!, {
+    const url = supabaseUrl || 'https://dummy.supabase.co'
+    const key = serviceRoleKey || 'dummy-key'
+    realClient = createClient(url, key, {
       auth: { persistSession: false },
     })
   } catch (err) {

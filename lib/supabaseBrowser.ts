@@ -25,7 +25,9 @@ let realClient: SupabaseClient | null = null
 
 if (isConfiguredSupabase(supabaseUrl, supabaseAnonKey)) {
   try {
-    realClient = createClient(supabaseUrl!, supabaseAnonKey!, {
+    const url = supabaseUrl || 'https://dummy.supabase.co'
+    const key = supabaseAnonKey || 'dummy-key'
+    realClient = createClient(url, key, {
       auth: { persistSession: false },
     })
   } catch (err) {
