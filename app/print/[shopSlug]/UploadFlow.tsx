@@ -18,6 +18,7 @@ import IDCardStudio from '@/components/IDCardStudio'
 import LegalStampStudio from '@/components/LegalStampStudio'
 import LegalStampModal, { LegalStampSettings } from '@/components/LegalStampModal'
 import CashfreeModal from '@/components/CashfreeModal'
+import AutoCropper from '@/components/AutoCropper'
 import PaymentMethodModal from '@/components/PaymentMethodModal'
 import DocumentBatchList, { DocumentItem } from '@/components/DocumentBatchList'
 import { ConfirmedDocumentItem } from '@/components/ConfirmationScreen'
@@ -113,6 +114,7 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
 
   const [file, setFile] = useState<File | null>(null)
   const [rawUploadedFile, setRawUploadedFile] = useState<File | null>(null)
+  const [pendingAutoCropFile, setPendingAutoCropFile] = useState<File | null>(null)
   const [studioPreviewUrl, setStudioPreviewUrl] = useState<string | null>(null)
   const [activeStudio, setActiveStudio] = useState<StudioType>('none')
   const [showLegalStampModal, setShowLegalStampModal] = useState<boolean>(false)
@@ -441,6 +443,15 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
       return
     }
 
+    if (isImage) {
+      setPendingAutoCropFile(f)
+      return
+    }
+
+    await processValidatedFile(f)
+  }
+
+  async function processValidatedFile(f: File, isAutoCropped = false) {
     setFile(f)
     setRawUploadedFile(f)
     setStudioPreviewUrl(null)
@@ -852,6 +863,19 @@ export default function UploadFlow({ shop, items, banners = [] }: Props) {
 
   return (
     <main className="mx-auto min-h-screen max-w-md pb-36 bg-paper">
+      {pendingAutoCropFile && (
+        <AutoCropper
+          file={pendingAutoCropFile}
+          onComplete={(processedFile) => {
+            setPendingAutoCropFile(null)
+            processValidatedFile(processedFile, true)
+          }}
+          onCancel={() => {
+            setPendingAutoCropFile(null)
+            setFileError('Upload cancelled.')
+          }}
+        />
+      )}
       {/* Redesigned Shop Header - Admin Link hidden on public customer front */}
       <ShopHeader
         shop={shop}
